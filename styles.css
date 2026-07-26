@@ -1,0 +1,699 @@
+:root {
+  color-scheme: light;
+  --page: #e8e6e1;
+  --paper: #faf8f4;
+  --card: #f4f1e8;
+  --ink: #3a372f;
+  --body: #514d42;
+  --muted: #8a8570;
+  --gold: #b3a985;
+  --olive: #7d7458;
+  --line: #e3ddca;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  background: var(--page);
+}
+
+body {
+  min-width: 320px;
+  background: var(--page);
+  color: var(--ink);
+  font-family: "Noto Serif KR", serif;
+  scrollbar-width: none;
+}
+
+body::-webkit-scrollbar {
+  display: none;
+}
+
+a {
+  color: var(--olive);
+  text-decoration: none;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  font: inherit;
+}
+
+.invitation {
+  position: relative;
+  max-width: 430px;
+  min-height: 100vh;
+  margin: 0 auto;
+  overflow: hidden;
+  background: var(--paper);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.08);
+}
+
+.cover {
+  position: relative;
+  display: flex;
+  height: 760px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 52px 32px 40px;
+}
+
+.cover__eyebrow,
+.section-title {
+  color: var(--gold);
+  font-family: "Cormorant Garamond", serif;
+  font-size: 20px;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+}
+
+.cover__eyebrow {
+  color: #a89b78;
+  font-size: 19px;
+  letter-spacing: 0.12em;
+}
+
+.cover__date {
+  margin-top: 14px;
+  color: #9a927b;
+  font-family: "Gowun Batang", serif;
+  font-size: 14px;
+  letter-spacing: 0.4em;
+}
+
+.cover__photo {
+  position: relative;
+  width: 290px;
+  height: 378px;
+  margin: 30px 0 34px;
+  overflow: hidden;
+  border-radius: 200px 200px 0 0;
+  background: #ebe9e3;
+  box-shadow: 0 18px 40px rgba(60, 55, 47, 0.18);
+}
+
+.image-placeholder {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #ebe9e3;
+  color: #777367;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.image-placeholder strong {
+  margin-top: 7px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.image-placeholder small {
+  margin-top: 2px;
+  color: #666259;
+  font-size: 10px;
+  text-decoration: underline;
+}
+
+.photo-icon {
+  position: relative;
+  display: block;
+  width: 18px;
+  height: 16px;
+  border: 2px solid #777367;
+  border-radius: 2px;
+}
+
+.photo-icon::before {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #777367;
+  content: "";
+}
+
+.photo-icon::after {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  left: 2px;
+  height: 7px;
+  background:
+    linear-gradient(135deg, transparent 44%, #777367 46%, #777367 56%, transparent 58%),
+    linear-gradient(45deg, transparent 39%, #777367 41%, #777367 51%, transparent 53%);
+  content: "";
+}
+
+.cover__names {
+  font-family: "Gowun Batang", serif;
+  font-size: 29px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+}
+
+.cover__names span {
+  margin: 0 6px;
+  color: var(--gold);
+  font-size: 18px;
+}
+
+.cover__info {
+  margin-top: 22px;
+  color: #6e6a5c;
+  font-size: 15px;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  line-height: 1.9;
+  text-align: center;
+}
+
+.section {
+  padding: 70px 40px;
+}
+
+.section--center,
+.schedule,
+.location,
+.thanks,
+.footer {
+  text-align: center;
+}
+
+.title-rule {
+  width: 34px;
+  height: 1px;
+  margin: 20px auto 34px;
+  background: #cfc7ad;
+}
+
+.greeting {
+  color: var(--body);
+  font-family: "Gowun Batang", serif;
+  font-size: 16px;
+  letter-spacing: 0.01em;
+  line-height: 2.5;
+  text-wrap: pretty;
+}
+
+.family {
+  margin-top: 40px;
+  color: #6e6a5c;
+  font-size: 15px;
+  line-height: 2.2;
+}
+
+.family span {
+  margin: 0 6px;
+  color: var(--gold);
+}
+
+.family strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.divider {
+  height: 1px;
+  margin: 0 40px;
+  background: linear-gradient(90deg, transparent, var(--line) 20%, var(--line) 80%, transparent);
+}
+
+.schedule {
+  padding: 66px 40px;
+}
+
+.schedule .title-rule,
+.location .title-rule {
+  margin-bottom: 30px;
+}
+
+.schedule__date {
+  font-family: "Gowun Batang", serif;
+  font-size: 23px;
+  letter-spacing: 0.06em;
+}
+
+.schedule__time {
+  margin-top: 8px;
+  color: var(--olive);
+  font-size: 16px;
+  letter-spacing: 0.04em;
+}
+
+.schedule__venue {
+  margin-top: 26px;
+  color: var(--body);
+  font-family: "Gowun Batang", serif;
+  font-size: 18px;
+}
+
+.schedule__hall {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.calendar-section {
+  padding: 0 40px 66px;
+}
+
+.calendar-card {
+  padding: 26px 24px;
+  border: 1px solid #e6e0cd;
+  border-radius: 6px;
+  background: var(--card);
+}
+
+.calendar-heading {
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+.calendar-heading p {
+  color: var(--gold);
+  font-family: "Cormorant Garamond", serif;
+  font-size: 15px;
+  font-style: italic;
+  letter-spacing: 0.14em;
+}
+
+.calendar-heading h2 {
+  margin-top: 2px;
+  font-family: "Gowun Batang", serif;
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+}
+
+.calendar {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--body);
+  font-size: 14px;
+  text-align: center;
+}
+
+.calendar th {
+  padding: 8px 0;
+  color: #a89b78;
+  font-weight: 400;
+}
+
+.calendar th.sunday,
+.calendar td.sunday {
+  color: #cc9999;
+}
+
+.calendar td {
+  padding: 9px 0;
+}
+
+.calendar__wedding-day {
+  display: inline-flex;
+  width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--olive);
+  color: #fff;
+  font-weight: 600;
+}
+
+.dday-copy {
+  margin-top: 22px;
+  font-family: "Gowun Batang", serif;
+  font-size: 14px;
+  line-height: 1.7;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.dday-copy span {
+  color: var(--gold);
+}
+
+.dday-copy .dday-suffix {
+  color: var(--ink);
+}
+
+.dday-copy strong {
+  color: var(--olive);
+  font-weight: 600;
+}
+
+.gallery-section {
+  padding: 66px 0;
+}
+
+.section-heading {
+  margin-bottom: 34px;
+  padding: 0 40px;
+  text-align: center;
+}
+
+.title-rule--tight {
+  margin-bottom: 0;
+}
+
+.gallery-grid {
+  display: grid;
+  padding: 0 12px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+}
+
+.gallery-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: 3px;
+  aspect-ratio: 1 / 1;
+}
+
+.gallery-item .image-placeholder strong {
+  margin-top: 5px;
+  font-size: 11px;
+}
+
+.gallery-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 24px;
+  gap: 14px;
+}
+
+.gallery-arrow {
+  display: flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e6e0cd;
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--olive);
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.gallery-arrow:disabled {
+  cursor: default;
+  opacity: 0.38;
+}
+
+.gallery-dots {
+  display: flex;
+  align-items: center;
+}
+
+.gallery-dot {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.gallery-dot::before {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 4px;
+  background: #dcd6c2;
+  content: "";
+  transform: translate(-50%, -50%);
+  transition: width 0.25s, background-color 0.25s;
+}
+
+.gallery-dot.is-active::before {
+  width: 20px;
+  background: var(--olive);
+}
+
+.gallery-page {
+  margin-top: 14px;
+  color: #a89b78;
+  font-family: "Cormorant Garamond", serif;
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  text-align: center;
+}
+
+.location {
+  padding: 66px 40px;
+}
+
+.location__venue {
+  font-family: "Gowun Batang", serif;
+  font-size: 19px;
+}
+
+.location__address {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.map-frame {
+  position: relative;
+  height: 240px;
+  margin-top: 24px;
+  overflow: hidden;
+  border: 1px solid #e6e0cd;
+  border-radius: 6px;
+}
+
+.map-fallback {
+  width: 100%;
+  height: 100%;
+}
+
+.map-fallback .image-placeholder {
+  padding: 20px;
+}
+
+.map-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+  gap: 8px;
+}
+
+.map-button {
+  flex: 1;
+  max-width: 150px;
+  padding: 11px 0;
+  border-radius: 6px;
+  font-family: "Noto Serif KR", serif;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.map-button--kakao {
+  background: #fee500;
+  color: #3a2e00;
+}
+
+.map-button--naver {
+  border: 1px solid #e6e0cd;
+  background: var(--card);
+  color: var(--body);
+}
+
+.transport {
+  display: flex;
+  flex-direction: column;
+  margin-top: 26px;
+  color: var(--body);
+  font-size: 14px;
+  gap: 16px;
+  line-height: 1.7;
+  text-align: left;
+}
+
+.transport strong {
+  color: var(--olive);
+  font-weight: 600;
+}
+
+.thanks {
+  padding: 66px 40px 30px;
+}
+
+.title-rule--thanks {
+  margin-bottom: 22px;
+}
+
+.thanks__copy {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 2;
+}
+
+.accounts {
+  display: flex;
+  flex-direction: column;
+  margin-top: 28px;
+  gap: 14px;
+}
+
+.account-card {
+  padding: 18px 20px;
+  border: 1px solid #e6e0cd;
+  border-radius: 6px;
+  background: var(--card);
+  text-align: left;
+}
+
+.account-card__side {
+  color: #a89b78;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.account-card__number {
+  margin-top: 6px;
+  font-family: "Gowun Batang", serif;
+  font-size: 16px;
+}
+
+.account-card__number span {
+  color: var(--olive);
+}
+
+.account-card__holder {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.footer {
+  padding: 36px 40px 60px;
+}
+
+.footer__names {
+  font-family: "Gowun Batang", serif;
+  font-size: 18px;
+  letter-spacing: 0.14em;
+}
+
+.footer__thanks {
+  margin-top: 12px;
+  color: var(--gold);
+  font-family: "Cormorant Garamond", serif;
+  font-size: 14px;
+  font-style: italic;
+  letter-spacing: 0.1em;
+}
+
+.petal-layer {
+  position: absolute;
+  z-index: 5;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.petal {
+  position: absolute;
+  top: -20px;
+  border-radius: 80% 0 80% 0;
+  background: radial-gradient(circle at 30% 30%, #f3e6df, #e7cdc0);
+  animation: petal-fall linear infinite;
+}
+
+.fade-section {
+  animation: float-up 0.9s ease both;
+}
+
+@keyframes float-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes petal-fall {
+  0% {
+    opacity: 0;
+    transform: translateY(-8%) rotate(0deg);
+  }
+  10%,
+  90% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(760px) rotate(220deg);
+  }
+}
+
+@media (max-width: 370px) {
+  .cover {
+    padding-right: 20px;
+    padding-left: 20px;
+  }
+
+  .cover__photo {
+    width: min(290px, calc(100vw - 64px));
+  }
+
+  .cover__names {
+    font-size: 25px;
+  }
+
+  .section,
+  .schedule,
+  .location,
+  .thanks {
+    padding-right: 28px;
+    padding-left: 28px;
+  }
+
+  .calendar-section {
+    padding-right: 28px;
+    padding-left: 28px;
+  }
+
+  .calendar-card {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-section,
+  .petal {
+    animation: none;
+  }
+}
