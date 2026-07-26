@@ -102,7 +102,7 @@ function setupGallery() {
 }
 
 function setupMapLinks() {
-  const links = buildExternalMapLinks("보타닉웨딩홀 오키드홀");
+  const links = buildExternalMapLinks("보타닉 웨딩파크");
   document.getElementById("kakao-link").href = links.kakao;
   document.getElementById("naver-link").href = links.naver;
 }
