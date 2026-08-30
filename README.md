@@ -18,6 +18,12 @@ python3 -m http.server 4173
 npm test
 ```
 
+## 사진 파일
+
+- 대표 사진: `images/cover.webp`
+- 갤러리 사진: `images/gallery/01.webp`부터 `images/gallery/25.webp`까지
+- 사진 파일이 없으면 깨진 이미지 대신 자리표시자가 표시됩니다.
+
 ## 지도 버튼
 
 Location 영역에는 카카오맵과 네이버지도 검색 버튼이 표시됩니다. 두 버튼은

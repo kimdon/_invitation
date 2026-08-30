@@ -58,6 +58,32 @@ test("buildExternalMapLinks creates Kakao and Naver searches for the venue only"
   );
 });
 
+test("buildGalleryPage returns a bounded nine-photo page", async () => {
+  const { buildGalleryPage } = await import("../src/invitation.js");
+  assert.equal(typeof buildGalleryPage, "function");
+  assert.deepEqual(buildGalleryPage(25, 9, 0), {
+    page: 0,
+    pageCount: 3,
+    items: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+  });
+  assert.deepEqual(buildGalleryPage(25, 9, 99), {
+    page: 2,
+    pageCount: 3,
+    items: [19, 20, 21, 22, 23, 24, 25],
+  });
+});
+
+test("getAccountGroup returns the requested three account holders", async () => {
+  const { getAccountGroup } = await import("../src/invitation.js");
+  assert.equal(typeof getAccountGroup, "function");
+  assert.deepEqual(getAccountGroup("groom").map((account) => account.holder), [
+    "김병관", "김창희", "김경자",
+  ]);
+  assert.deepEqual(getAccountGroup("bride").map((account) => account.holder), [
+    "김도은", "김천호", "김민주",
+  ]);
+});
+
 test("the page exposes map buttons without loading map SDKs", async () => {
   const [html, app, logic, css] = await Promise.all([
     readFile(new URL("../index.html", import.meta.url), "utf8"),
@@ -74,25 +100,63 @@ test("the page exposes map buttons without loading map SDKs", async () => {
   assert.doesNotMatch(source, /dapi\.kakao\.com/);
   assert.doesNotMatch(source, /oapi\.map\.naver\.com/);
   assert.doesNotMatch(source, /kakaoJavaScriptKey|naverNcpKeyId|loadScript/);
-  assert.match(css, /\.gallery-dot\s*\{[^}]*width:\s*24px;[^}]*height:\s*24px;/s);
+  assert.match(css, /\.gallery-dot\s*\{/);
+  assert.match(css, /\.gallery-dot\.is-active\s*\{/);
 });
 
 test("the page uses the requested bride and groom names everywhere", async () => {
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
 
   assert.match(html, /김병관 <span>·<\/span> 김도은/);
-  assert.match(html, /병관 <span>♥<\/span> 도은의 결혼식이/);
+  assert.match(html, /병관 &amp; 도은의 결혼식이/);
   assert.match(html, /김창희 · 김경자 <span>의 아들<\/span> <strong>김병관<\/strong>/);
   assert.match(html, /김천호 · 김민주 <span>의 딸<\/span> <strong>김도은<\/strong>/);
   assert.match(html, /2026년 11월 21일 토요일 오후 1시 50분/);
   assert.match(html, /서울 강서구 보타닉 웨딩파크/);
   assert.match(html, /서울특별시 강서구 마곡중앙5로 6/);
-  assert.equal((html.match(/class="account-card"/g) ?? []).length, 6);
-  for (const holder of ["김병관", "김창희", "김경자", "김도은", "김천호", "김민주"]) {
-    assert.match(html, new RegExp(`예금주 ${holder}`));
-  }
-  assert.match(html, /000000-01-000001/);
-  assert.match(html, /000000-01-000006/);
+  assert.match(html, /data-account-side="groom"/);
+  assert.match(html, /data-account-side="bride"/);
   assert.doesNotMatch(html, /홍길동|김가나|길동|가나/);
   assert.doesNotMatch(html, /홍판서|춘섬|김진사|이씨|보타닉웨딩홀|오키드홀/);
+});
+
+test("the page uses the editorial invitation structure", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+
+  assert.match(html, /class="cover cover--editorial"/);
+  assert.match(html, /Byeong-gwan/);
+  assert.match(html, /Do-eun/);
+  assert.match(html, /class="section section--dark schedule-calendar/);
+  assert.match(html, /id="account-dialog"/);
+  assert.match(html, /id="photo-viewer"/);
+  assert.match(html, /id="copy-toast"/);
+  assert.match(html, /서울특별시 강서구 마곡중앙5로 6/);
+  assert.doesNotMatch(html, /<x-dc|<sc-if|<sc-for|image-slot|support\.js/);
+});
+
+test("the stylesheet defines the approved editorial theme", async () => {
+  const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
+
+  assert.match(css, /--paper:\s*#f4efe7/);
+  assert.match(css, /--ink:\s*#1c1916/);
+  assert.match(css, /--gold:\s*#b39a6e/);
+  assert.match(css, /\.schedule-calendar\s*\{/);
+  assert.match(css, /\.account-dialog\s*\{/);
+  assert.match(css, /\.photo-viewer\s*\{/);
+  assert.match(css, /@media\s*\(prefers-reduced-motion:\s*reduce\)/);
+});
+
+test("the app wires the approved invitation interactions", async () => {
+  const app = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
+
+  assert.match(app, /buildGalleryPage/);
+  assert.match(app, /getAccountGroup/);
+  assert.match(app, /showModal\(\)/);
+  assert.match(app, /navigator\.clipboard\.writeText/);
+  assert.match(app, /document\.execCommand\("copy"\)/);
+  assert.match(app, /ArrowLeft/);
+  assert.match(app, /ArrowRight/);
+  assert.match(app, /IntersectionObserver/);
+  assert.match(app, /getBoundingClientRect\(\)/);
+  assert.match(app, /addEventListener\("scroll"/);
 });
