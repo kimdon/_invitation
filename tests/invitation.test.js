@@ -145,3 +145,16 @@ test("the stylesheet defines the approved editorial theme", async () => {
   assert.match(css, /\.photo-viewer\s*\{/);
   assert.match(css, /@media\s*\(prefers-reduced-motion:\s*reduce\)/);
 });
+
+test("the app wires the approved invitation interactions", async () => {
+  const app = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
+
+  assert.match(app, /buildGalleryPage/);
+  assert.match(app, /getAccountGroup/);
+  assert.match(app, /showModal\(\)/);
+  assert.match(app, /navigator\.clipboard\.writeText/);
+  assert.match(app, /document\.execCommand\("copy"\)/);
+  assert.match(app, /ArrowLeft/);
+  assert.match(app, /ArrowRight/);
+  assert.match(app, /IntersectionObserver/);
+});
