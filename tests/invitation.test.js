@@ -157,4 +157,6 @@ test("the app wires the approved invitation interactions", async () => {
   assert.match(app, /ArrowLeft/);
   assert.match(app, /ArrowRight/);
   assert.match(app, /IntersectionObserver/);
+  assert.match(app, /getBoundingClientRect\(\)/);
+  assert.match(app, /addEventListener\("scroll"/);
 });

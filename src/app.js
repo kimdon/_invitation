@@ -325,7 +325,17 @@ function setupRevealAnimations() {
     return;
   }
 
-  const observer = new IntersectionObserver((entries) => {
+  let observer;
+  const revealPassedSections = () => {
+    sections.forEach((section) => {
+      if (section.classList.contains("is-in")) return;
+      if (section.getBoundingClientRect().top >= window.innerHeight * 1.05) return;
+      section.classList.add("is-in");
+      observer?.unobserve(section);
+    });
+  };
+
+  observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       if (!entry.isIntersecting) return;
       entry.target.classList.add("is-in");
@@ -333,6 +343,8 @@ function setupRevealAnimations() {
     });
   }, { rootMargin: "0px 0px -8%", threshold: 0.08 });
   sections.forEach((section) => observer.observe(section));
+  revealPassedSections();
+  window.addEventListener("scroll", revealPassedSections, { passive: true });
 }
 
 function addPetals() {
