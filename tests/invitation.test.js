@@ -58,6 +58,32 @@ test("buildExternalMapLinks creates Kakao and Naver searches for the venue only"
   );
 });
 
+test("buildGalleryPage returns a bounded nine-photo page", async () => {
+  const { buildGalleryPage } = await import("../src/invitation.js");
+  assert.equal(typeof buildGalleryPage, "function");
+  assert.deepEqual(buildGalleryPage(25, 9, 0), {
+    page: 0,
+    pageCount: 3,
+    items: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+  });
+  assert.deepEqual(buildGalleryPage(25, 9, 99), {
+    page: 2,
+    pageCount: 3,
+    items: [19, 20, 21, 22, 23, 24, 25],
+  });
+});
+
+test("getAccountGroup returns the requested three account holders", async () => {
+  const { getAccountGroup } = await import("../src/invitation.js");
+  assert.equal(typeof getAccountGroup, "function");
+  assert.deepEqual(getAccountGroup("groom").map((account) => account.holder), [
+    "김병관", "김창희", "김경자",
+  ]);
+  assert.deepEqual(getAccountGroup("bride").map((account) => account.holder), [
+    "김도은", "김천호", "김민주",
+  ]);
+});
+
 test("the page exposes map buttons without loading map SDKs", async () => {
   const [html, app, logic, css] = await Promise.all([
     readFile(new URL("../index.html", import.meta.url), "utf8"),
