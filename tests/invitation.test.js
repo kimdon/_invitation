@@ -81,18 +81,28 @@ test("the page uses the requested bride and groom names everywhere", async () =>
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
 
   assert.match(html, /김병관 <span>·<\/span> 김도은/);
-  assert.match(html, /병관 <span>♥<\/span> 도은의 결혼식이/);
+  assert.match(html, /병관 &amp; 도은의 결혼식이/);
   assert.match(html, /김창희 · 김경자 <span>의 아들<\/span> <strong>김병관<\/strong>/);
   assert.match(html, /김천호 · 김민주 <span>의 딸<\/span> <strong>김도은<\/strong>/);
   assert.match(html, /2026년 11월 21일 토요일 오후 1시 50분/);
   assert.match(html, /서울 강서구 보타닉 웨딩파크/);
   assert.match(html, /서울특별시 강서구 마곡중앙5로 6/);
-  assert.equal((html.match(/class="account-card"/g) ?? []).length, 6);
-  for (const holder of ["김병관", "김창희", "김경자", "김도은", "김천호", "김민주"]) {
-    assert.match(html, new RegExp(`예금주 ${holder}`));
-  }
-  assert.match(html, /000000-01-000001/);
-  assert.match(html, /000000-01-000006/);
+  assert.match(html, /data-account-side="groom"/);
+  assert.match(html, /data-account-side="bride"/);
   assert.doesNotMatch(html, /홍길동|김가나|길동|가나/);
   assert.doesNotMatch(html, /홍판서|춘섬|김진사|이씨|보타닉웨딩홀|오키드홀/);
+});
+
+test("the page uses the editorial invitation structure", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+
+  assert.match(html, /class="cover cover--editorial"/);
+  assert.match(html, /Byeong-gwan/);
+  assert.match(html, /Do-eun/);
+  assert.match(html, /class="section section--dark schedule-calendar/);
+  assert.match(html, /id="account-dialog"/);
+  assert.match(html, /id="photo-viewer"/);
+  assert.match(html, /id="copy-toast"/);
+  assert.match(html, /서울특별시 강서구 마곡중앙5로 6/);
+  assert.doesNotMatch(html, /<x-dc|<sc-if|<sc-for|image-slot|support\.js/);
 });
