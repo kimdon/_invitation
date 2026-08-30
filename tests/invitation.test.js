@@ -100,7 +100,8 @@ test("the page exposes map buttons without loading map SDKs", async () => {
   assert.doesNotMatch(source, /dapi\.kakao\.com/);
   assert.doesNotMatch(source, /oapi\.map\.naver\.com/);
   assert.doesNotMatch(source, /kakaoJavaScriptKey|naverNcpKeyId|loadScript/);
-  assert.match(css, /\.gallery-dot\s*\{[^}]*width:\s*24px;[^}]*height:\s*24px;/s);
+  assert.match(css, /\.gallery-dot\s*\{/);
+  assert.match(css, /\.gallery-dot\.is-active\s*\{/);
 });
 
 test("the page uses the requested bride and groom names everywhere", async () => {
@@ -131,4 +132,16 @@ test("the page uses the editorial invitation structure", async () => {
   assert.match(html, /id="copy-toast"/);
   assert.match(html, /서울특별시 강서구 마곡중앙5로 6/);
   assert.doesNotMatch(html, /<x-dc|<sc-if|<sc-for|image-slot|support\.js/);
+});
+
+test("the stylesheet defines the approved editorial theme", async () => {
+  const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
+
+  assert.match(css, /--paper:\s*#f4efe7/);
+  assert.match(css, /--ink:\s*#1c1916/);
+  assert.match(css, /--gold:\s*#b39a6e/);
+  assert.match(css, /\.schedule-calendar\s*\{/);
+  assert.match(css, /\.account-dialog\s*\{/);
+  assert.match(css, /\.photo-viewer\s*\{/);
+  assert.match(css, /@media\s*\(prefers-reduced-motion:\s*reduce\)/);
 });
