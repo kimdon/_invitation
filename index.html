@@ -17,44 +17,40 @@
       content="2026년 11월 21일 토요일 오후 1시 50분 · 보타닉 웨딩파크"
     >
     <meta property="og:url" content="https://kimdon.github.io/_invitation/">
-    <meta property="og:image" content="https://kimdon.github.io/_invitation/public/images/cover.jpg">
+    <meta property="og:image" content="https://kimdon.github.io/_invitation/images/cover.webp">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-      href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Serif+KR:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400;1,500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400;1,500&amp;family=Noto+Serif+KR:wght@300;400;500;600&amp;display=swap"
       rel="stylesheet"
     >
     <link rel="stylesheet" href="./styles.css">
     <script type="module" src="./src/app.js"></script>
   </head>
   <body>
-    <main class="invitation" aria-labelledby="couple-names">
-      <h1 class="sr-only" id="couple-names">김병관 <span>·</span> 김도은</h1>
-
-      <section class="cover cover--editorial" aria-label="표지">
-        <div class="cover__photo">
-          <img
-            class="cover__photo-img"
-            src="public/images/cover.jpg"
-            alt=""
-            loading="eager"
-            data-placeholder-label="대표 사진"
-            data-placeholder-role="img"
-          >
+    <main class="invitation">
+      <section class="cover cover--editorial" aria-labelledby="couple-names">
+        <div class="cover__media" id="cover-media">
+          <div class="media-placeholder media-placeholder--cover" role="img" aria-label="대표 사진 자리표시자">
+            <span aria-hidden="true">PHOTO</span>
+            <strong>대표 사진</strong>
+          </div>
         </div>
-        <div class="cover__scrim" aria-hidden="true"></div>
-        <div class="cover__names-en" aria-hidden="true">
+        <div class="cover__shade" aria-hidden="true"></div>
+        <div class="cover__content">
+          <h1 class="visually-hidden" id="couple-names">김병관 <span>·</span> 김도은</h1>
           <p class="cover__name">Byeong-gwan</p>
-          <p class="cover__amp">&amp;</p>
+          <p class="cover__ampersand">&amp;</p>
           <p class="cover__name">Do-eun</p>
           <p class="cover__date">2026 . 11 . 21</p>
+          <p class="visually-hidden">2026년 11월 21일 토요일 오후 1시 50분</p>
         </div>
-        <div class="cover__arrow" aria-hidden="true">↓</div>
+        <span class="cover__arrow" aria-hidden="true">↓</span>
       </section>
 
-      <section class="section fade-section" aria-labelledby="invitation-title">
-        <h2 class="section-title" id="invitation-title">Invitation</h2>
-        <div class="title-rule" aria-hidden="true"></div>
+      <section class="section invitation-copy fade-section" aria-labelledby="invitation-title">
+        <h2 class="section-kicker" id="invitation-title">Invitation</h2>
+        <div class="section-rule" aria-hidden="true"></div>
         <p class="greeting">
           서로가 마주보며 다져온 사랑을<br>
           이제 함께 한곳을 바라보며<br>
@@ -72,17 +68,15 @@
       </section>
 
       <section class="section section--dark schedule-calendar fade-section" aria-labelledby="schedule-title">
-        <h2 class="section-title" id="schedule-title">When &amp; Where</h2>
-        <div class="title-rule title-rule--dark" aria-hidden="true"></div>
-        <p class="schedule__date">2026년 11월 21일 토요일 오후 1시 50분</p>
+        <h2 class="section-kicker" id="schedule-title">When &amp; Where</h2>
+        <div class="section-rule section-rule--dark" aria-hidden="true"></div>
+        <p class="schedule__date">2026. 11. 21. SAT</p>
+        <p class="schedule__time">오후 1시 50분</p>
         <p class="schedule__venue">서울 강서구 보타닉 웨딩파크</p>
 
-        <div class="calendar-card">
-          <div class="calendar-heading">
-            <p>November</p>
-            <h3>2026년 11월</h3>
-          </div>
-          <table class="calendar">
+        <div class="calendar-wrap">
+          <p class="calendar__month">November</p>
+          <table class="calendar" aria-label="2026년 11월 예식 달력">
             <thead>
               <tr>
                 <th class="sunday" scope="col">일</th>
@@ -99,16 +93,14 @@
           <p class="dday-copy">
             병관 &amp; 도은의 결혼식이
             <strong id="dday">D-day</strong>
-            <span class="dday-suffix" id="dday-suffix">입니다</span>
+            <span id="dday-suffix">입니다</span>
           </p>
         </div>
       </section>
 
       <section class="section gallery-section fade-section" aria-labelledby="gallery-title">
-        <div class="section-heading">
-          <h2 class="section-title" id="gallery-title">Gallery</h2>
-          <div class="title-rule title-rule--tight" aria-hidden="true"></div>
-        </div>
+        <h2 class="section-kicker" id="gallery-title">Gallery</h2>
+        <div class="section-rule" aria-hidden="true"></div>
         <div class="gallery-grid" id="gallery-grid"></div>
         <div class="gallery-controls">
           <button class="gallery-arrow" id="gallery-prev" type="button" aria-label="이전 사진 페이지">‹</button>
@@ -119,31 +111,26 @@
       </section>
 
       <section class="section location fade-section" aria-labelledby="location-title">
-        <h2 class="section-title" id="location-title">Location</h2>
-        <div class="title-rule" aria-hidden="true"></div>
+        <h2 class="section-kicker" id="location-title">Location</h2>
+        <div class="section-rule" aria-hidden="true"></div>
         <p class="location__venue">보타닉 웨딩파크</p>
         <p class="location__address">서울특별시 강서구 마곡중앙5로 6</p>
         <div class="map-frame">
-          <div class="map-fallback">
-            <img
-              class="map-fallback__img"
-              src="public/images/map.webp"
-              alt=""
-              loading="lazy"
-              data-placeholder-label="약도 · 지도 캡처"
-            >
+          <div class="media-placeholder media-placeholder--map" role="img" aria-label="약도와 지도 자리표시자">
+            <span aria-hidden="true">MAP</span>
+            <strong>약도 이미지</strong>
           </div>
         </div>
         <div class="map-actions">
           <a
-            class="map-button map-button--kakao"
+            class="map-button map-button--primary"
             id="kakao-link"
             href="https://map.kakao.com/link/search/%EB%B3%B4%ED%83%80%EB%8B%89%20%EC%9B%A8%EB%94%A9%ED%8C%8C%ED%81%AC"
             target="_blank"
             rel="noopener noreferrer"
-          >카카오맵으로 열기</a>
+          >카카오맵 길찾기</a>
           <a
-            class="map-button map-button--naver"
+            class="map-button"
             id="naver-link"
             href="https://map.naver.com/p/search/%EB%B3%B4%ED%83%80%EB%8B%89%20%EC%9B%A8%EB%94%A9%ED%8C%8C%ED%81%AC"
             target="_blank"
@@ -152,61 +139,27 @@
         </div>
         <div class="transport">
           <p><strong>지하철</strong><br>5호선 발산역 3번 출구에서 도보 8분</p>
-          <p><strong>버스</strong><br>보타닉공원 정류장 하차 (간선 605, 지선 6642)</p>
-          <p><strong>주차</strong><br>건물 내 주차장 이용 (2시간 무료)</p>
+          <p><strong>버스</strong><br>보타닉공원 정류장 하차 · 간선 605 / 지선 6642</p>
+          <p><strong>주차</strong><br>건물 내 주차장 이용 · 2시간 무료</p>
         </div>
       </section>
 
       <section class="section section--dark thanks fade-section" aria-labelledby="thanks-title">
-        <h2 class="section-title" id="thanks-title">Thanks to</h2>
-        <div class="title-rule title-rule--dark" aria-hidden="true"></div>
+        <h2 class="section-kicker" id="thanks-title">Thanks to</h2>
+        <div class="section-rule section-rule--dark" aria-hidden="true"></div>
         <p class="thanks__copy">
-          축하의 마음을 전하고 싶으신<br>
-          분들을 위해 계좌번호를 안내드립니다.
+          축하의 마음을 전하고 싶으신 분들을 위해<br>
+          계좌번호를 안내드립니다.
         </p>
-        <div class="thanks__buttons">
-          <button class="account-launch account-launch--groom" type="button" data-account-side="groom">신랑측 계좌번호</button>
-          <button class="account-launch account-launch--bride" type="button" data-account-side="bride">신부측 계좌번호</button>
+        <div class="account-actions">
+          <button class="account-button" type="button" data-account-side="groom">신랑측 계좌번호</button>
+          <button class="account-button account-button--accent" type="button" data-account-side="bride">신부측 계좌번호</button>
         </div>
-        <noscript>
-          <div class="accounts accounts--fallback">
-            <article class="account-card">
-              <p class="account-card__side">신랑</p>
-              <p class="account-card__number">국민은행 <span>000000-01-000001</span></p>
-              <p class="account-card__holder">예금주 김병관</p>
-            </article>
-            <article class="account-card">
-              <p class="account-card__side">신랑 아버지</p>
-              <p class="account-card__number">국민은행 <span>000000-01-000002</span></p>
-              <p class="account-card__holder">예금주 김창희</p>
-            </article>
-            <article class="account-card">
-              <p class="account-card__side">신랑 어머니</p>
-              <p class="account-card__number">국민은행 <span>000000-01-000003</span></p>
-              <p class="account-card__holder">예금주 김경자</p>
-            </article>
-            <article class="account-card">
-              <p class="account-card__side">신부</p>
-              <p class="account-card__number">신한은행 <span>000000-01-000004</span></p>
-              <p class="account-card__holder">예금주 김도은</p>
-            </article>
-            <article class="account-card">
-              <p class="account-card__side">신부 아버지</p>
-              <p class="account-card__number">신한은행 <span>000000-01-000005</span></p>
-              <p class="account-card__holder">예금주 김천호</p>
-            </article>
-            <article class="account-card">
-              <p class="account-card__side">신부 어머니</p>
-              <p class="account-card__number">신한은행 <span>000000-01-000006</span></p>
-              <p class="account-card__holder">예금주 김민주</p>
-            </article>
-          </div>
-        </noscript>
       </section>
 
       <footer class="footer">
-        <p class="footer__mark">B &amp; D</p>
-        <p class="footer__thanks">THANK YOU</p>
+        <p class="footer__monogram">B &amp; D</p>
+        <p class="footer__thanks">Thank you</p>
       </footer>
 
       <div class="petal-layer" id="petal-layer" aria-hidden="true"></div>
@@ -215,17 +168,21 @@
     <dialog class="account-dialog" id="account-dialog" aria-labelledby="account-dialog-title">
       <div class="dialog__header">
         <h2 id="account-dialog-title">계좌번호</h2>
-        <button id="account-dialog-close" type="button" aria-label="계좌번호 닫기">✕</button>
+        <button class="dialog__close" id="account-dialog-close" type="button" aria-label="계좌번호 닫기">✕</button>
       </div>
-      <div id="account-dialog-list"></div>
+      <div class="account-dialog__list" id="account-dialog-list"></div>
     </dialog>
 
     <dialog class="photo-viewer" id="photo-viewer" aria-labelledby="photo-viewer-label">
-      <p id="photo-viewer-label"></p>
-      <button id="photo-viewer-close" type="button" aria-label="사진 닫기">✕</button>
-      <div id="photo-viewer-content"></div>
-      <button id="photo-viewer-prev" type="button" aria-label="이전 사진">‹</button>
-      <button id="photo-viewer-next" type="button" aria-label="다음 사진">›</button>
+      <div class="photo-viewer__header">
+        <p id="photo-viewer-label">사진</p>
+        <button class="dialog__close dialog__close--dark" id="photo-viewer-close" type="button" aria-label="사진 닫기">✕</button>
+      </div>
+      <div class="photo-viewer__content" id="photo-viewer-content"></div>
+      <div class="photo-viewer__controls">
+        <button id="photo-viewer-prev" type="button" aria-label="이전 사진">‹</button>
+        <button id="photo-viewer-next" type="button" aria-label="다음 사진">›</button>
+      </div>
     </dialog>
 
     <p class="copy-toast" id="copy-toast" role="status" aria-live="polite" hidden></p>
