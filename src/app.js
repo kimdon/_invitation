@@ -77,7 +77,7 @@ function createGalleryItem(number) {
   item.dataset.photoIndex = String(number - 1);
 
   const img = document.createElement("img");
-  img.src = `images/gallery/${String(number).padStart(2, "0")}.webp`;
+  img.src = `public/images/gallery/${String(number).padStart(2, "0")}.webp`;
   img.alt = "";
   img.loading = "lazy";
   img.addEventListener(
