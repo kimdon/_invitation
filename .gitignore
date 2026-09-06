@@ -1,0 +1,8 @@
+# OS junk
+.DS_Store
+
+# IDE
+.idea/
+
+# Original / unoptimized source photos (not served by the site)
+public/images/originals/

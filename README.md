@@ -26,7 +26,7 @@ Location 영역에는 카카오맵과 네이버지도 검색 버튼이 표시됩
 
 ## 사진 파일
 
-- 대표 사진: `images/cover.webp`
-- 약도 · 지도 캡처: `images/map.webp`
-- 갤러리: `images/gallery/01.webp`부터 순서대로 (25장, `01`~`25`)
+- 대표 사진: `public/images/cover.jpg` (추가 완료)
+- 약도 · 지도 캡처: `public/images/map.webp`
+- 갤러리: `public/images/gallery/01.webp`부터 순서대로 (25장, `01`~`25`)
 - 사진이 없으면 화면에는 깨진 이미지 대신 자리표시자가 표시됩니다.
