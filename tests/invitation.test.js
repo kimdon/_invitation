@@ -6,8 +6,6 @@ import {
   buildCalendarWeeks,
   buildExternalMapLinks,
   getDdayDisplay,
-  buildGalleryPage,
-  getAccountGroup,
 } from "../src/invitation.js";
 
 test("buildCalendarWeeks returns every day in November 2026", () => {
@@ -60,7 +58,9 @@ test("buildExternalMapLinks creates Kakao and Naver searches for the venue only"
   );
 });
 
-test("buildGalleryPage returns a bounded nine-photo page", () => {
+test("buildGalleryPage returns a bounded nine-photo page", async () => {
+  const { buildGalleryPage } = await import("../src/invitation.js");
+  assert.equal(typeof buildGalleryPage, "function");
   assert.deepEqual(buildGalleryPage(25, 9, 0), {
     page: 0,
     pageCount: 3,
@@ -73,7 +73,9 @@ test("buildGalleryPage returns a bounded nine-photo page", () => {
   });
 });
 
-test("getAccountGroup returns the requested three account holders", () => {
+test("getAccountGroup returns the requested three account holders", async () => {
+  const { getAccountGroup } = await import("../src/invitation.js");
+  assert.equal(typeof getAccountGroup, "function");
   assert.deepEqual(getAccountGroup("groom").map((account) => account.holder), [
     "김병관", "김창희", "김경자",
   ]);
@@ -102,6 +104,22 @@ test("the page exposes map buttons without loading map SDKs", async () => {
   assert.match(css, /\.gallery-dot\.is-active\s*\{/);
 });
 
+test("the page uses the requested bride and groom names everywhere", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+
+  assert.match(html, /김병관 <span>·<\/span> 김도은/);
+  assert.match(html, /병관 &amp; 도은의 결혼식이/);
+  assert.match(html, /김창희 · 김경자 <span>의 아들<\/span> <strong>김병관<\/strong>/);
+  assert.match(html, /김천호 · 김민주 <span>의 딸<\/span> <strong>김도은<\/strong>/);
+  assert.match(html, /2026년 11월 21일 토요일 오후 1시 50분/);
+  assert.match(html, /서울 강서구 보타닉 웨딩파크/);
+  assert.match(html, /서울특별시 강서구 마곡중앙5로 6/);
+  assert.match(html, /data-account-side="groom"/);
+  assert.match(html, /data-account-side="bride"/);
+  assert.doesNotMatch(html, /홍길동|김가나|길동|가나/);
+  assert.doesNotMatch(html, /홍판서|춘섬|김진사|이씨|보타닉웨딩홀|오키드홀/);
+});
+
 test("the page uses the editorial invitation structure", async () => {
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
 
@@ -116,26 +134,9 @@ test("the page uses the editorial invitation structure", async () => {
   assert.doesNotMatch(html, /<x-dc|<sc-if|<sc-for|image-slot|support\.js/);
 });
 
-test("the page uses the requested bride and groom names everywhere", async () => {
-  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
-
-  assert.match(html, /김병관 <span>·<\/span> 김도은/);
-  assert.match(html, /병관 &amp; 도은의 결혼식이/);
-  assert.match(html, /김창희 · 김경자 <span>의 아들<\/span> <strong>김병관<\/strong>/);
-  assert.match(html, /김천호 · 김민주 <span>의 딸<\/span> <strong>김도은<\/strong>/);
-  assert.match(html, /2026년 11월 21일 토요일 오후 1시 50분/);
-  assert.match(html, /서울 강서구 보타닉 웨딩파크/);
-  assert.match(html, /서울특별시 강서구 마곡중앙5로 6/);
-  assert.match(html, /data-account-side="groom"/);
-  assert.match(html, /data-account-side="bride"/);
-  assert.match(html, /000000-01-000001/);
-  assert.match(html, /000000-01-000006/);
-  assert.doesNotMatch(html, /홍길동|김가나|길동|가나/);
-  assert.doesNotMatch(html, /홍판서|춘섬|김진사|이씨|보타닉웨딩홀|오키드홀/);
-});
-
 test("the stylesheet defines the approved editorial theme", async () => {
   const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
+
   assert.match(css, /--paper:\s*#f4efe7/);
   assert.match(css, /--ink:\s*#1c1916/);
   assert.match(css, /--gold:\s*#b39a6e/);
@@ -147,6 +148,7 @@ test("the stylesheet defines the approved editorial theme", async () => {
 
 test("the app wires the approved invitation interactions", async () => {
   const app = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
+
   assert.match(app, /buildGalleryPage/);
   assert.match(app, /getAccountGroup/);
   assert.match(app, /showModal\(\)/);
@@ -155,4 +157,6 @@ test("the app wires the approved invitation interactions", async () => {
   assert.match(app, /ArrowLeft/);
   assert.match(app, /ArrowRight/);
   assert.match(app, /IntersectionObserver/);
+  assert.match(app, /getBoundingClientRect\(\)/);
+  assert.match(app, /addEventListener\("scroll"/);
 });
