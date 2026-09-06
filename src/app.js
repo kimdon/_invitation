@@ -1,53 +1,51 @@
 import {
   buildCalendarWeeks,
   buildExternalMapLinks,
+  getDdayDisplay,
   buildGalleryPage,
   getAccountGroup,
-  getDdayDisplay,
 } from "./invitation.js";
 
+const WEDDING_DATE = new Date(2026, 10, 21, 12);
 const GALLERY_SIZE = 25;
 const GALLERY_PER_PAGE = 9;
-const WEDDING_DATE = new Date(2026, 10, 21, 12);
 
-function gallerySource(number) {
-  return `./images/gallery/${String(number).padStart(2, "0")}.webp`;
-}
+const galleryState = { page: 0 };
+const viewerState = { index: null };
+let renderGallery = () => {};
 
-function createPlaceholder(label, className = "gallery-placeholder") {
+function createPlaceholder(label) {
   const placeholder = document.createElement("div");
-  placeholder.className = className;
+  placeholder.className = "image-placeholder";
   placeholder.setAttribute("role", "img");
   placeholder.setAttribute("aria-label", `${label} 자리표시자`);
-  placeholder.textContent = label;
+  placeholder.innerHTML = `
+    <span class="photo-icon" aria-hidden="true"></span>
+    <strong>${label}</strong>
+    <small>or browse files</small>
+  `;
   return placeholder;
 }
 
-function loadOptionalImage(source, alt, placeholder, onLoad) {
-  const image = document.createElement("img");
-  image.alt = alt;
-  image.hidden = true;
-  image.addEventListener("load", () => {
-    placeholder.remove();
-    image.hidden = false;
-    onLoad?.();
-  }, { once: true });
-  image.addEventListener("error", () => image.remove(), { once: true });
-  image.src = source;
-  return image;
-}
-
-function renderCoverPhoto() {
-  const container = document.getElementById("cover-media");
-  const placeholder = container.querySelector(".media-placeholder");
-  const image = loadOptionalImage("./images/cover.webp", "김병관과 김도은의 대표 사진", placeholder);
-  container.appendChild(image);
+function setupStaticImageFallbacks() {
+  document.querySelectorAll("img[data-placeholder-label]").forEach((img) => {
+    img.addEventListener(
+      "error",
+      () => {
+        const placeholder = createPlaceholder(img.dataset.placeholderLabel);
+        if (img.dataset.placeholderRole) {
+          placeholder.setAttribute("role", img.dataset.placeholderRole);
+        }
+        img.replaceWith(placeholder);
+      },
+      { once: true },
+    );
+  });
 }
 
 function renderCalendar() {
   const body = document.getElementById("calendar-body");
   const weeks = buildCalendarWeeks(2026, 10, 21);
-  body.replaceChildren();
 
   weeks.forEach((week) => {
     const row = document.createElement("tr");
@@ -73,203 +71,219 @@ function renderCalendar() {
   document.getElementById("dday-suffix").textContent = dday.suffix;
 }
 
-function setupPhotoViewer() {
-  const dialog = document.getElementById("photo-viewer");
-  const content = document.getElementById("photo-viewer-content");
-  const label = document.getElementById("photo-viewer-label");
-  const closeButton = document.getElementById("photo-viewer-close");
-  const previous = document.getElementById("photo-viewer-prev");
-  const next = document.getElementById("photo-viewer-next");
-  let current = 1;
-  let touchStart = null;
-
-  function render() {
-    content.replaceChildren();
-    label.textContent = `${current} / ${GALLERY_SIZE}`;
-    const empty = document.createElement("p");
-    empty.className = "photo-viewer__empty";
-    empty.textContent = "이 칸에는 아직 사진이 없습니다";
-    const image = loadOptionalImage(gallerySource(current), `사진 ${current}`, empty);
-    content.append(empty, image);
-  }
-
-  function move(offset) {
-    current = ((current - 1 + offset + GALLERY_SIZE) % GALLERY_SIZE) + 1;
-    render();
-  }
-
-  function close() {
-    if (dialog.open) dialog.close();
-  }
-
-  function show(number) {
-    current = number;
-    render();
-    if (!dialog.open) dialog.showModal();
-    document.body.classList.add("is-locked");
-  }
-
-  closeButton.addEventListener("click", close);
-  previous.addEventListener("click", () => move(-1));
-  next.addEventListener("click", () => move(1));
-  dialog.addEventListener("click", (event) => {
-    if (event.target === dialog) close();
-  });
-  dialog.addEventListener("close", () => document.body.classList.remove("is-locked"));
-  document.addEventListener("keydown", (event) => {
-    if (!dialog.open) return;
-    if (event.key === "ArrowLeft") move(-1);
-    if (event.key === "ArrowRight") move(1);
-  });
-  content.addEventListener("touchstart", (event) => {
-    const touch = event.changedTouches[0];
-    touchStart = { x: touch.clientX, y: touch.clientY };
-  }, { passive: true });
-  content.addEventListener("touchend", (event) => {
-    if (!touchStart) return;
-    const touch = event.changedTouches[0];
-    const dx = touch.clientX - touchStart.x;
-    const dy = touch.clientY - touchStart.y;
-    touchStart = null;
-    if (Math.abs(dx) > 46 && Math.abs(dx) > Math.abs(dy) * 1.4) {
-      move(dx < 0 ? 1 : -1);
-    }
-  }, { passive: true });
-
-  return show;
-}
-
-function createGalleryItem(number, openViewer) {
+function createGalleryItem(number) {
   const item = document.createElement("div");
   item.className = "gallery-item";
+  item.dataset.photoIndex = String(number - 1);
 
-  const placeholder = createPlaceholder(`사진 ${number}`);
-  const image = loadOptionalImage(gallerySource(number), `사진 ${number}`, placeholder);
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "gallery-open";
-  button.setAttribute("aria-label", `사진 ${number} 크게 보기`);
-  button.textContent = "⤢";
-  button.addEventListener("click", () => openViewer(number));
+  const img = document.createElement("img");
+  img.src = `images/gallery/${String(number).padStart(2, "0")}.webp`;
+  img.alt = "";
+  img.loading = "lazy";
+  img.addEventListener(
+    "error",
+    () => {
+      img.replaceWith(createPlaceholder(`사진 ${number}`));
+    },
+    { once: true },
+  );
+  item.appendChild(img);
 
-  item.append(placeholder, image, button);
+  const expand = document.createElement("button");
+  expand.type = "button";
+  expand.className = "gallery-item__expand";
+  expand.setAttribute("aria-label", "사진 크게 보기");
+  expand.textContent = "⤢";
+  expand.addEventListener("click", (event) => {
+    event.stopPropagation();
+    openPhotoViewer(number - 1);
+  });
+  item.appendChild(expand);
+
+  item.addEventListener("click", () => openPhotoViewer(number - 1));
+
   return item;
 }
 
-function setupGallery(openViewer) {
+function setupGallery() {
   const grid = document.getElementById("gallery-grid");
   const dots = document.getElementById("gallery-dots");
   const pageLabel = document.getElementById("gallery-page");
   const previous = document.getElementById("gallery-prev");
   const next = document.getElementById("gallery-next");
-  let page = 0;
-  let touchStart = null;
 
   function render() {
-    const galleryPage = buildGalleryPage(GALLERY_SIZE, GALLERY_PER_PAGE, page);
-    page = galleryPage.page;
-    grid.replaceChildren(...galleryPage.items.map((number) => createGalleryItem(number, openViewer)));
-    dots.replaceChildren();
+    renderGalleryInner();
+  }
 
-    for (let index = 0; index < galleryPage.pageCount; index += 1) {
+  function renderGalleryInner() {
+    const { page, pageCount, items } = buildGalleryPage(GALLERY_SIZE, GALLERY_PER_PAGE, galleryState.page);
+    galleryState.page = page;
+
+    grid.replaceChildren();
+    items.forEach((number) => grid.appendChild(createGalleryItem(number)));
+
+    dots.replaceChildren();
+    for (let index = 0; index < pageCount; index += 1) {
       const dot = document.createElement("button");
       dot.type = "button";
       dot.className = `gallery-dot${index === page ? " is-active" : ""}`;
       dot.setAttribute("aria-label", `갤러리 ${index + 1}페이지`);
       dot.setAttribute("aria-current", index === page ? "page" : "false");
       dot.addEventListener("click", () => {
-        page = index;
+        galleryState.page = index;
         render();
       });
       dots.appendChild(dot);
     }
 
     previous.disabled = page === 0;
-    next.disabled = page === galleryPage.pageCount - 1;
-    pageLabel.textContent = `${page + 1} / ${galleryPage.pageCount}`;
+    next.disabled = page === pageCount - 1;
+    pageLabel.textContent = `${page + 1} / ${pageCount}`;
   }
 
   previous.addEventListener("click", () => {
-    page -= 1;
+    galleryState.page = Math.max(0, galleryState.page - 1);
     render();
   });
   next.addEventListener("click", () => {
-    page += 1;
+    galleryState.page += 1;
     render();
   });
-  grid.addEventListener("touchstart", (event) => {
-    const touch = event.changedTouches[0];
-    touchStart = { x: touch.clientX, y: touch.clientY };
-  }, { passive: true });
-  grid.addEventListener("touchend", (event) => {
-    if (!touchStart) return;
-    const touch = event.changedTouches[0];
-    const dx = touch.clientX - touchStart.x;
-    const dy = touch.clientY - touchStart.y;
-    touchStart = null;
-    if (Math.abs(dx) > 46 && Math.abs(dx) > Math.abs(dy) * 1.4) {
-      page += dx < 0 ? 1 : -1;
-      render();
-    }
-  }, { passive: true });
 
+  document.getElementById("gallery-grid").addEventListener("touchstart", trackSwipeStart, { passive: true });
+  document.getElementById("gallery-grid").addEventListener(
+    "touchend",
+    (event) => finishSwipe(event, () => {
+      galleryState.page += 1;
+      render();
+    }, () => {
+      galleryState.page = Math.max(0, galleryState.page - 1);
+      render();
+    }),
+    { passive: true },
+  );
+
+  renderGallery = render;
   render();
 }
 
-function fallbackCopy(text) {
-  const textarea = document.createElement("textarea");
-  textarea.value = text;
-  textarea.setAttribute("readonly", "");
-  textarea.style.cssText = "position:fixed;opacity:0;pointer-events:none;";
-  document.body.appendChild(textarea);
-  textarea.select();
-  document.execCommand("copy");
-  textarea.remove();
+let swipeStartX = null;
+let swipeStartY = null;
+
+function trackSwipeStart(event) {
+  const touch = event.changedTouches[0];
+  swipeStartX = touch.clientX;
+  swipeStartY = touch.clientY;
 }
 
-async function copyAccountNumber(text) {
-  if (navigator.clipboard && window.isSecureContext) {
-    try {
-      await navigator.clipboard.writeText(text);
-      return;
-    } catch {
-      fallbackCopy(text);
-      return;
+function finishSwipe(event, onSwipeLeft, onSwipeRight) {
+  if (swipeStartX === null) return;
+  const touch = event.changedTouches[0];
+  const dx = touch.clientX - swipeStartX;
+  const dy = touch.clientY - swipeStartY;
+  swipeStartX = null;
+  if (Math.abs(dx) > 46 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+    if (dx < 0) onSwipeLeft();
+    else onSwipeRight();
+  }
+}
+
+function lockScroll(locked) {
+  document.body.style.overflow = locked ? "hidden" : "";
+}
+
+function setupPhotoViewer() {
+  const dialog = document.getElementById("photo-viewer");
+  const content = document.getElementById("photo-viewer-content");
+  const label = document.getElementById("photo-viewer-label");
+  const closeButton = document.getElementById("photo-viewer-close");
+  const prevButton = document.getElementById("photo-viewer-prev");
+  const nextButton = document.getElementById("photo-viewer-next");
+
+  function paint(index) {
+    label.textContent = `${index + 1} / ${GALLERY_SIZE}`;
+    content.replaceChildren();
+
+    const sourceImg = document.querySelector(`.gallery-item[data-photo-index="${index}"] img`);
+    if (sourceImg && sourceImg.isConnected) {
+      const img = document.createElement("img");
+      img.src = sourceImg.currentSrc || sourceImg.src;
+      img.alt = "";
+      content.appendChild(img);
+    } else {
+      content.appendChild(createPlaceholder(`사진 ${index + 1}`));
     }
   }
-  fallbackCopy(text);
+
+  window.openPhotoViewer = function openPhotoViewer(index) {
+    viewerState.index = index;
+    lockScroll(true);
+    paint(index);
+    dialog.showModal();
+  };
+
+  function close() {
+    lockScroll(false);
+    viewerState.index = null;
+    if (dialog.open) dialog.close();
+  }
+
+  function move(direction) {
+    if (viewerState.index === null) return;
+    const nextIndex = (viewerState.index + direction + GALLERY_SIZE) % GALLERY_SIZE;
+    const page = Math.floor(nextIndex / GALLERY_PER_PAGE);
+    if (page !== galleryState.page) {
+      galleryState.page = page;
+      renderGallery();
+    }
+    viewerState.index = nextIndex;
+    paint(nextIndex);
+  }
+
+  closeButton.addEventListener("click", close);
+  dialog.addEventListener("cancel", () => {
+    lockScroll(false);
+    viewerState.index = null;
+  });
+  dialog.addEventListener("click", (event) => {
+    if (event.target === content || event.target === dialog) close();
+  });
+  prevButton.addEventListener("click", () => move(-1));
+  nextButton.addEventListener("click", () => move(1));
+
+  dialog.addEventListener("touchstart", trackSwipeStart, { passive: true });
+  dialog.addEventListener(
+    "touchend",
+    (event) => finishSwipe(event, () => move(1), () => move(-1)),
+    { passive: true },
+  );
+
+  document.addEventListener("keydown", (event) => {
+    if (viewerState.index === null) return;
+    if (event.key === "ArrowLeft") move(-1);
+    if (event.key === "ArrowRight") move(1);
+  });
 }
 
-function createAccountRow(account, showToast) {
-  const row = document.createElement("article");
+function openPhotoViewer(index) {
+  window.openPhotoViewer(index);
+}
+
+function renderAccountRow(account) {
+  const row = document.createElement("div");
   row.className = "account-row";
-
-  const role = document.createElement("p");
-  role.className = "account-row__role";
-  role.textContent = account.role;
-
-  const content = document.createElement("div");
-  content.className = "account-row__content";
-  const details = document.createElement("div");
-  const number = document.createElement("p");
-  number.className = "account-row__number";
-  number.textContent = `${account.bank} ${account.number}`;
-  const holder = document.createElement("p");
-  holder.className = "account-row__holder";
-  holder.textContent = `예금주 ${account.holder}`;
-  details.append(number, holder);
-
-  const copy = document.createElement("button");
-  copy.type = "button";
-  copy.className = "account-row__copy";
-  copy.textContent = "복사";
-  copy.setAttribute("aria-label", `${account.role} 계좌번호 복사`);
-  copy.addEventListener("click", async () => {
-    await copyAccountNumber(account.number);
-    showToast();
-  });
-  content.append(details, copy);
-  row.append(role, content);
+  row.innerHTML = `
+    <p class="account-row__side">${account.role}</p>
+    <div class="account-row__body">
+      <div>
+        <p class="account-row__number">${account.bank} ${account.number}</p>
+        <p class="account-row__holder">예금주 ${account.holder}</p>
+      </div>
+      <button type="button" class="account-row__copy">복사</button>
+    </div>
+  `;
+  row.querySelector(".account-row__copy").addEventListener("click", () => copyText(account.number));
   return row;
 }
 
@@ -278,38 +292,64 @@ function setupAccountDialog() {
   const title = document.getElementById("account-dialog-title");
   const list = document.getElementById("account-dialog-list");
   const closeButton = document.getElementById("account-dialog-close");
-  const toast = document.getElementById("copy-toast");
-  let toastTimer;
 
-  function showToast() {
-    toast.textContent = "계좌번호가 복사되었습니다.";
-    toast.hidden = false;
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => {
-      toast.hidden = true;
-    }, 1800);
-  }
+  document.querySelectorAll("[data-account-side]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const side = button.dataset.accountSide;
+      title.textContent = side === "bride" ? "신부측 계좌번호" : "신랑측 계좌번호";
+      list.replaceChildren(...getAccountGroup(side).map(renderAccountRow));
+      lockScroll(true);
+      dialog.showModal();
+    });
+  });
 
   function close() {
+    lockScroll(false);
     if (dialog.open) dialog.close();
   }
 
-  function show(side) {
-    const accounts = getAccountGroup(side);
-    title.textContent = side === "bride" ? "신부측 계좌번호" : "신랑측 계좌번호";
-    list.replaceChildren(...accounts.map((account) => createAccountRow(account, showToast)));
-    if (!dialog.open) dialog.showModal();
-    document.body.classList.add("is-locked");
-  }
-
-  document.querySelectorAll("[data-account-side]").forEach((button) => {
-    button.addEventListener("click", () => show(button.dataset.accountSide));
-  });
   closeButton.addEventListener("click", close);
+  dialog.addEventListener("cancel", () => lockScroll(false));
   dialog.addEventListener("click", (event) => {
     if (event.target === dialog) close();
   });
-  dialog.addEventListener("close", () => document.body.classList.remove("is-locked"));
+}
+
+function showToast(message) {
+  const toast = document.getElementById("copy-toast");
+  toast.textContent = message;
+  toast.hidden = false;
+  clearTimeout(showToast.timer);
+  showToast.timer = setTimeout(() => {
+    toast.hidden = true;
+  }, 1800);
+}
+
+function copyText(text) {
+  function done() {
+    showToast("계좌번호가 복사되었습니다.");
+  }
+  function fallbackCopy() {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand("copy");
+    } catch (error) {
+      // ignored: clipboard fallback best effort
+    }
+    document.body.removeChild(textarea);
+    done();
+  }
+
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(done, fallbackCopy);
+  } else {
+    fallbackCopy();
+  }
 }
 
 function setupMapLinks() {
@@ -320,36 +360,24 @@ function setupMapLinks() {
 
 function setupRevealAnimations() {
   const sections = document.querySelectorAll(".fade-section");
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) {
+  if (!("IntersectionObserver" in window)) {
     sections.forEach((section) => section.classList.add("is-in"));
     return;
   }
-
-  let observer;
-  const revealPassedSections = () => {
-    sections.forEach((section) => {
-      if (section.classList.contains("is-in")) return;
-      if (section.getBoundingClientRect().top >= window.innerHeight * 1.05) return;
-      section.classList.add("is-in");
-      observer?.unobserve(section);
-    });
-  };
-
-  observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (!entry.isIntersecting) return;
-      entry.target.classList.add("is-in");
-      observer.unobserve(entry.target);
-    });
-  }, { rootMargin: "0px 0px -8%", threshold: 0.08 });
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) entry.target.classList.add("is-in");
+      });
+    },
+    { threshold: 0.12 },
+  );
   sections.forEach((section) => observer.observe(section));
-  revealPassedSections();
-  window.addEventListener("scroll", revealPassedSections, { passive: true });
 }
 
 function addPetals() {
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const layer = document.getElementById("petal-layer");
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const count = window.innerWidth < 480 ? 7 : 11;
   for (let index = 0; index < count; index += 1) {
     const petal = document.createElement("span");
@@ -364,10 +392,10 @@ function addPetals() {
   }
 }
 
-renderCoverPhoto();
+setupStaticImageFallbacks();
 renderCalendar();
-const openViewer = setupPhotoViewer();
-setupGallery(openViewer);
+setupGallery();
+setupPhotoViewer();
 setupAccountDialog();
 setupMapLinks();
 setupRevealAnimations();
