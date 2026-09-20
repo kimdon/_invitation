@@ -224,6 +224,21 @@ test("developer copy uses merge language while both modes share the requested En
   }
 });
 
+test("developer invitation terms use developer-mode-only highlight markup", async () => {
+  const [html, css] = await Promise.all([
+    readFile(new URL("../index.html", import.meta.url), "utf8"),
+    readFile(new URL("../styles.css", import.meta.url), "utf8"),
+  ]);
+  const highlightedTerms = ["branch", "commit", "conflict", "main branch", "merge", "approve"];
+
+  for (const term of highlightedTerms) {
+    assert.match(html, new RegExp(`<span class="developer-term">${term}</span>`));
+  }
+  assert.equal((html.match(/class="developer-term"/g) ?? []).length, highlightedTerms.length);
+  assert.match(css, /\.invitation\[data-mode="developer"\] \.developer-term\s*\{/);
+  assert.doesNotMatch(css, /(^|\n)\.developer-term\s*\{/);
+});
+
 test("AI guest messages contain exactly the five approved agents and complete card metadata", () => {
   assert.deepEqual(AI_GUEST_MESSAGES.map((agent) => agent.name), [
     "Codex",
@@ -296,8 +311,28 @@ test("approval uses one reusable canvas firework with reduced-motion protection"
   assert.match(app, /Math\.sin\(angle\)/);
   assert.match(app, /reducedMotion\.matches/);
   assert.match(app, /globalCompositeOperation = "destination-out"/);
+  assert.match(app, /FIREWORK_BURST_PLAN/);
+  assert.match(app, /pendingBursts\.shift\(\)/);
+  assert.match(app, /length: 72/);
+  assert.match(app, /4\.5 \+ Math\.random\(\) \* 6/);
+  assert.match(app, /1\.8 \+ Math\.random\(\) \* 1\.8/);
   assert.doesNotMatch(app, /particle\.textContent|symbols = \[/);
   assert.doesNotMatch(css, /@keyframes developer-particle/);
+});
+
+test("firework plan covers six staggered screen regions", async () => {
+  const invitation = await import("../src/invitation.js");
+  const plan = invitation.FIREWORK_BURST_PLAN;
+
+  assert.ok(Array.isArray(plan));
+  assert.equal(plan.length, 6);
+  assert.ok(Math.min(...plan.map((burst) => burst.x)) < 0.25);
+  assert.ok(Math.max(...plan.map((burst) => burst.x)) > 0.75);
+  assert.ok(Math.min(...plan.map((burst) => burst.y)) < 0.3);
+  assert.ok(Math.max(...plan.map((burst) => burst.y)) > 0.7);
+  assert.deepEqual(plan.map((burst) => burst.delay), [0, 260, 520, 780, 1040, 1300]);
+  assert.equal(Object.isFrozen(plan), true);
+  assert.equal(plan.every((burst) => Object.isFrozen(burst)), true);
 });
 
 test("calendar uses a fixed seven-column layout so the wedding marker cannot widen Saturday", async () => {
@@ -337,7 +372,7 @@ test("the page exposes one shared invitation DOM with accessible developer contr
   assert.doesNotMatch(app, /messageInput|rsvpLog|VISITOR/);
   assert.match(app, /submit\.addEventListener\("click"/);
   assert.match(app, /200 OK — 승인되었습니다\. ♥/);
-  assert.match(app, /length: 96/);
+  assert.match(app, /length: 72/);
   assert.match(css, /\.invitation\[data-mode="developer"\]/);
   assert.match(css, /\.developer-rsvp/);
   assert.match(css, /prefers-reduced-motion:\s*reduce/);

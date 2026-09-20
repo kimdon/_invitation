@@ -21,6 +21,15 @@ export const DEVELOPER_TRANSITION_COMMANDS = Object.freeze([
 
 export const WEDDING_RELEASE = "wedding-v1.0";
 
+export const FIREWORK_BURST_PLAN = Object.freeze([
+  Object.freeze({ x: 0.18, y: 0.26, delay: 0 }),
+  Object.freeze({ x: 0.82, y: 0.22, delay: 260 }),
+  Object.freeze({ x: 0.5, y: 0.46, delay: 520 }),
+  Object.freeze({ x: 0.2, y: 0.72, delay: 780 }),
+  Object.freeze({ x: 0.8, y: 0.66, delay: 1040 }),
+  Object.freeze({ x: 0.52, y: 0.82, delay: 1300 }),
+]);
+
 export const AI_GUEST_MESSAGES = Object.freeze([
   Object.freeze({
     icon: ">_",
