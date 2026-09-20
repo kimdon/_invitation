@@ -159,10 +159,25 @@ test("the stylesheet defines the approved pure-white normal mode", async () => {
   assert.match(css, /--ink:\s*#111111/);
   assert.match(css, /font-family:\s*Gulim,\s*"굴림",\s*sans-serif/);
   assert.doesNotMatch(html, /fonts\.googleapis\.com|fonts\.gstatic\.com/);
-  assert.match(css, /\.invitation\[data-mode="normal"\] \.cover\s*\{/);
+  assert.match(css, /\.invitation\[data-mode="normal"\] \.cover\s*\{[^}]*padding:\s*0/s);
+  assert.match(
+    css,
+    /\.invitation\[data-mode="normal"\] \.cover__media\s*\{[^}]*margin:\s*24px 24px 0[^}]*overflow:\s*hidden[^}]*border-radius:\s*50% 50% 0 0 \/ 26% 26% 0 0/s,
+  );
+  assert.match(
+    css,
+    /\.invitation\[data-mode="normal"\] \.cover__name\s*\{[^}]*font-family:\s*Didot,\s*"Bodoni Moda",\s*"Bodoni MT",\s*"Times New Roman",\s*serif[^}]*font-style:\s*italic/s,
+  );
+  assert.match(
+    css,
+    /\.invitation\[data-mode="normal"\] \.cover__ampersand\s*\{[^}]*font-family:\s*Didot,\s*"Bodoni Moda",\s*"Bodoni MT",\s*"Times New Roman",\s*serif[^}]*font-style:\s*italic/s,
+  );
   assert.match(css, /\.invitation\[data-mode="normal"\] \.section--dark\s*\{[^}]*background:\s*var\(--paper\)/s);
   assert.match(css, /\.invitation\[data-mode="normal"\] \.gallery-item\s*\{[^}]*border:\s*1px solid var\(--ink\)/s);
   assert.match(css, /\.invitation\[data-mode="normal"\] \.calendar__wedding-day\s*\{[^}]*border-radius:\s*50%[^}]*background:\s*var\(--ink\)[^}]*color:\s*var\(--paper\)/s);
+  assert.match(css, /\.invitation\[data-mode="normal"\] \.map-button\s*\{[^}]*border-radius:\s*10px/s);
+  assert.match(css, /\.invitation\[data-mode="normal"\] \.footer__monogram\s*\{[^}]*display:\s*none/s);
+  assert.match(css, /\.invitation\[data-mode="developer"\] \.footer__monogram\s*\{/);
   assert.match(css, /\.invitation\[data-mode="developer"\] \.section\s*\{/);
   assert.match(css, /\.photo-viewer__content\s*\{[^}]*touch-action:\s*none/s);
   assert.match(css, /@media\s*\(prefers-reduced-motion:\s*reduce\)/);
