@@ -237,9 +237,15 @@ test("developer invitation terms use developer-mode-only highlight markup", asyn
   assert.equal((html.match(/class="developer-term"/g) ?? []).length, highlightedTerms.length);
   assert.match(css, /\.invitation\[data-mode="developer"\] \.developer-term\s*\{/);
   assert.doesNotMatch(css, /(^|\n)\.developer-term\s*\{/);
+  const termRule = css.match(
+    /\.invitation\[data-mode="developer"\] \.developer-term\s*\{([^}]*)\}/,
+  )?.[1] ?? "";
+  assert.match(termRule, /color:\s*var\(--terminal-blue\)/);
+  assert.match(termRule, /font-weight:\s*600/);
+  assert.doesNotMatch(termRule, /text-decoration/);
 });
 
-test("developer content stays gated until the boot sequence is ready", async () => {
+test("git switching and wedding boot share one terminal before Invitation is revealed", async () => {
   const [html, app, css] = await Promise.all([
     readFile(new URL("../index.html", import.meta.url), "utf8"),
     readFile(new URL("../src/app.js", import.meta.url), "utf8"),
@@ -250,15 +256,19 @@ test("developer content stays gated until the boot sequence is ready", async () 
     html,
     /<main class="invitation" data-mode="normal" data-boot-state="idle">/,
   );
+  assert.match(html, /id="developer-transition-brand"[^>]+hidden/);
+  assert.doesNotMatch(html, /id="developer-console-log"/);
   assert.match(app, /invitation\.dataset\.bootState = "booting"/);
   assert.match(app, /invitation\.setAttribute\("aria-busy", "true"\)/);
-  assert.match(app, /await wait\(400\)/);
+  assert.match(app, /transitionLines\.appendChild\(line\)/);
+  assert.doesNotMatch(app, /const consoleLog =/);
+  assert.match(app, /await wait\(600\)/);
+  assert.match(app, /transition\.classList\.add\("is-exiting"\)/);
+  assert.match(app, /await wait\(450\)/);
   assert.match(app, /invitation\.dataset\.bootState = "ready"/);
   assert.match(app, /invitation\.dataset\.bootState = "idle"/);
-  assert.match(
-    css,
-    /\.invitation\[data-mode="developer"\]\[data-boot-state="booting"\]/,
-  );
+  assert.match(css, /\.developer-transition\.is-exiting\s*\{/);
+  assert.match(css, /\.invitation\[data-mode="developer"\] \.cover\s*\{[^}]*display:\s*none/s);
   assert.match(css, /@keyframes developer-content-ready/);
 });
 
@@ -374,8 +384,8 @@ test("the page exposes one shared invitation DOM with accessible developer contr
 
   assert.match(html, /<main class="invitation" data-mode="normal" data-boot-state="idle">/);
   assert.match(html, /id="developer-toggle"[^>]+aria-pressed="false"/);
-  assert.match(html, /id="developer-transition"[^>]+hidden/);
-  assert.match(html, /id="developer-console-log"[^>]+role="log"[^>]+aria-live="polite"/);
+  assert.match(html, /id="developer-transition"[^>]+aria-live="polite"[^>]+hidden/);
+  assert.match(html, /id="developer-transition-lines"[^>]+role="log"/);
   assert.match(html, /id="ai-agent-selector"/);
   assert.doesNotMatch(html, /id="visitor-message"/);
   assert.doesNotMatch(html, /id="developer-rsvp-log"/);

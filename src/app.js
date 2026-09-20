@@ -327,8 +327,11 @@ function setupDeveloperMode() {
   const invitation = document.querySelector(".invitation");
   const toggle = document.getElementById("developer-toggle");
   const transition = document.getElementById("developer-transition");
+  const transitionBrand = document.getElementById("developer-transition-brand");
   const transitionLines = document.getElementById("developer-transition-lines");
-  const consoleLog = document.getElementById("developer-console-log");
+  const pageSections = invitation.querySelectorAll(
+    ":scope > .cover, :scope > .section, :scope > .developer-rsvp, :scope > .footer",
+  );
   const selector = document.getElementById("ai-agent-selector");
   const card = document.getElementById("ai-agent-card");
   const icon = document.getElementById("ai-agent-icon");
@@ -389,11 +392,17 @@ function setupDeveloperMode() {
     return line;
   }
 
-  function scrollToLatest(line) {
-    if (reducedMotion.matches) return;
-    const bottom = window.scrollY + line.getBoundingClientRect().bottom + 28;
-    if (bottom <= window.scrollY + window.innerHeight) return;
-    window.scrollTo({ top: bottom - window.innerHeight, behavior: "smooth" });
+  function setPageSectionsHidden(hidden) {
+    pageSections.forEach((section) => {
+      section.hidden = hidden;
+    });
+  }
+
+  function scrollToLatest() {
+    transitionLines.scrollTo({
+      top: transitionLines.scrollHeight,
+      behavior: reducedMotion.matches ? "auto" : "smooth",
+    });
   }
 
   function createAgentIconVisual(agent, className) {
@@ -459,6 +468,7 @@ function setupDeveloperMode() {
     line.className = success ? "is-success" : "";
     line.textContent = success ? text : `$ ${text}`;
     transitionLines.appendChild(line);
+    scrollToLatest();
   }
 
   async function renderWeddingBoot(id) {
@@ -473,22 +483,31 @@ function setupDeveloperMode() {
       "13:49:59.421",
       "13:50:00.000",
     ];
-    consoleLog.replaceChildren();
-    consoleLog.setAttribute("aria-busy", "true");
+    transitionBrand.hidden = false;
+    transitionLines.setAttribute("aria-busy", "true");
 
     for (const [index, entry] of buildDeveloperSequence().entries()) {
       await wait(index === 0 ? 120 : 360);
-      if (id !== sequenceId || invitation.dataset.mode !== "developer") return;
+      if (id !== sequenceId || invitation.dataset.mode !== "switching") return;
       const line = createLogLine(entry, times[index]);
-      consoleLog.appendChild(line);
-      scrollToLatest(line);
+      transitionLines.appendChild(line);
+      scrollToLatest();
     }
 
-    consoleLog.setAttribute("aria-busy", "false");
-    await wait(400);
-    if (id !== sequenceId || invitation.dataset.mode !== "developer") return;
+    transitionLines.setAttribute("aria-busy", "false");
+    await wait(600);
+    if (id !== sequenceId || invitation.dataset.mode !== "switching") return;
+    transition.classList.add("is-exiting");
+    await wait(450);
+    if (id !== sequenceId || invitation.dataset.mode !== "switching") return;
+    transition.hidden = true;
+    transition.classList.remove("is-exiting");
+    invitation.dataset.mode = "developer";
     invitation.dataset.bootState = "ready";
     invitation.setAttribute("aria-busy", "false");
+    document.body.classList.remove("is-switching-mode");
+    setPageSectionsHidden(false);
+    toggle.disabled = false;
     state = "developer.ready";
     startAgentRotation();
   }
@@ -503,8 +522,12 @@ function setupDeveloperMode() {
     document.body.classList.add("is-developer-mode", "is-switching-mode");
     toggle.setAttribute("aria-pressed", "true");
     toggle.disabled = true;
+    transition.classList.remove("is-exiting");
+    transitionBrand.hidden = true;
     transitionLines.replaceChildren();
+    transitionLines.setAttribute("aria-busy", "true");
     transition.hidden = false;
+    setPageSectionsHidden(true);
     window.scrollTo({ top: 0, behavior: reducedMotion.matches ? "auto" : "smooth" });
 
     for (const command of DEVELOPER_TRANSITION_COMMANDS) {
@@ -516,13 +539,8 @@ function setupDeveloperMode() {
     await wait(1000);
     if (id !== sequenceId) return;
 
-    transitionLines.replaceChildren();
-    transition.hidden = true;
-    invitation.dataset.mode = "developer";
-    document.body.classList.remove("is-switching-mode");
-    toggle.disabled = false;
     state = "developer.booting";
-    renderWeddingBoot(id);
+    await renderWeddingBoot(id);
   }
 
   function leaveDeveloperMode() {
@@ -535,8 +553,11 @@ function setupDeveloperMode() {
     toggle.setAttribute("aria-pressed", "false");
     toggle.disabled = false;
     transition.hidden = true;
+    transition.classList.remove("is-exiting");
+    transitionBrand.hidden = true;
+    transitionLines.setAttribute("aria-busy", "false");
     transitionLines.replaceChildren();
-    consoleLog.replaceChildren();
+    setPageSectionsHidden(false);
     response.hidden = true;
     approved.hidden = true;
     window.scrollTo({ top: 0, behavior: reducedMotion.matches ? "auto" : "smooth" });
