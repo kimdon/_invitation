@@ -13,7 +13,6 @@ import {
 const GALLERY_SIZE = 25;
 const GALLERY_PER_PAGE = 9;
 const WEDDING_DATE = new Date(2026, 10, 21, 12);
-const FIREWORK_SEQUENCE_MS = FIREWORK_BURST_PLAN.at(-1).delay + 1_500;
 
 function gallerySource(number) {
   return `./images/gallery/${String(number).padStart(2, "0")}.webp`;
@@ -350,6 +349,7 @@ function setupDeveloperMode() {
   let agentInterval = null;
   let fireworkFrame = null;
   let state = "normal";
+  let isFinalApproved = false;
 
   function schedule(callback, delay) {
     const timer = window.setTimeout(() => {
@@ -431,7 +431,7 @@ function setupDeveloperMode() {
     handle.textContent = agent.handle;
     request.textContent = agent.request;
     approved.textContent = agent.approved;
-    approved.hidden = true;
+    approved.hidden = false;
 
     selector.querySelectorAll("button").forEach((button, index) => {
       const selected = index === agentIndex;
@@ -442,8 +442,19 @@ function setupDeveloperMode() {
 
   function startAgentRotation() {
     stopAgentRotation();
-    if (reducedMotion.matches || invitation.dataset.mode !== "developer") return;
+    if (reducedMotion.matches || invitation.dataset.mode !== "developer" || isFinalApproved) return;
     agentInterval = window.setInterval(() => renderAgent(agentIndex + 1), 3_500);
+  }
+
+  function resetFinalApproval() {
+    isFinalApproved = false;
+    agentIndex = 0;
+    submit.textContent = "APPROVE ♥";
+    submit.disabled = false;
+    response.textContent = "";
+    response.hidden = true;
+    response.classList.remove("is-complete");
+    renderAgent(0);
   }
 
   function resetAgentRotation(index) {
@@ -454,8 +465,9 @@ function setupDeveloperMode() {
   AI_GUEST_MESSAGES.forEach((agent, index) => {
     const button = document.createElement("button");
     button.type = "button";
-    button.setAttribute("aria-label", `${agent.name} 승인 메시지 보기`);
+    button.setAttribute("aria-label", `${agent.name} 승인 완료 리뷰 보기`);
     button.setAttribute("aria-pressed", "false");
+    button.classList.add("is-approved");
     button.style.setProperty("--agent-accent", agent.accent);
     button.append(createAgentIconVisual(agent, "agent-selector__visual"));
     button.addEventListener("click", () => resetAgentRotation(index));
@@ -495,7 +507,7 @@ function setupDeveloperMode() {
     }
 
     transitionLines.setAttribute("aria-busy", "false");
-    await wait(600);
+    await wait(1000);
     if (id !== sequenceId || invitation.dataset.mode !== "switching") return;
     transition.classList.add("is-exiting");
     await wait(450);
@@ -514,6 +526,7 @@ function setupDeveloperMode() {
 
   async function enterDeveloperMode() {
     cancelAnimations();
+    resetFinalApproval();
     const id = sequenceId;
     state = "switching";
     invitation.dataset.mode = "switching";
@@ -671,18 +684,15 @@ function setupDeveloperMode() {
   });
 
   submit.addEventListener("click", () => {
-    if (state !== "developer.ready" && state !== "celebrated") return;
-    const agent = AI_GUEST_MESSAGES[agentIndex];
-    approved.hidden = false;
-    response.textContent = "200 OK — 승인되었습니다. ♥";
-    response.hidden = false;
+    if (state !== "developer.ready" || isFinalApproved) return;
+    isFinalApproved = true;
+    stopAgentRotation();
+    submit.textContent = "APPROVED ✓";
     submit.disabled = true;
-    state = "celebrated";
-    launchFireworks(agent);
-    schedule(() => {
-      submit.disabled = false;
-      state = "developer.ready";
-    }, FIREWORK_SEQUENCE_MS);
+    response.textContent = "FINAL APPROVAL COMPLETE — wedding-v1.0 is ready to merge ♥";
+    response.classList.add("is-complete");
+    response.hidden = false;
+    launchFireworks(AI_GUEST_MESSAGES[agentIndex]);
   });
 }
 

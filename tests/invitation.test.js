@@ -262,7 +262,8 @@ test("git switching and wedding boot share one terminal before Invitation is rev
   assert.match(app, /invitation\.setAttribute\("aria-busy", "true"\)/);
   assert.match(app, /transitionLines\.appendChild\(line\)/);
   assert.doesNotMatch(app, /const consoleLog =/);
-  assert.match(app, /await wait\(600\)/);
+  assert.match(app, /await wait\(1000\)/);
+  assert.doesNotMatch(app, /await wait\(600\)/);
   assert.match(app, /transition\.classList\.add\("is-exiting"\)/);
   assert.match(app, /await wait\(450\)/);
   assert.match(app, /invitation\.dataset\.bootState = "ready"/);
@@ -325,8 +326,28 @@ test("local AI icons connect selectors and the active card with accessible fallb
   assert.match(app, /image\.addEventListener\("error"/);
   assert.doesNotMatch(app, /agent-selector__name/);
   assert.doesNotMatch(css, /\.agent-selector__name/);
-  assert.match(app, /setAttribute\("aria-label", `\$\{agent\.name\} 승인 메시지 보기`\)/);
+  assert.match(app, /setAttribute\("aria-label", `\$\{agent\.name\} 승인 완료 리뷰 보기`\)/);
   assert.match(css, /object-fit:\s*contain/);
+});
+
+test("AI reviews are approved by default and the user can approve the release once", async () => {
+  const [html, app, css] = await Promise.all([
+    readFile(new URL("../index.html", import.meta.url), "utf8"),
+    readFile(new URL("../src/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../styles.css", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(html, /다섯 명의 에이전트가 두 사람의 새로운 배포를 검토하고 승인했습니다\./);
+  assert.match(app, /approved\.hidden = false/);
+  assert.match(app, /button\.classList\.add\("is-approved"\)/);
+  assert.match(app, /let isFinalApproved = false/);
+  assert.match(app, /if \(state !== "developer\.ready" \|\| isFinalApproved\) return/);
+  assert.match(app, /isFinalApproved = true/);
+  assert.match(app, /submit\.textContent = "APPROVED ✓"/);
+  assert.match(app, /FINAL APPROVAL COMPLETE — wedding-v1\.0 is ready to merge ♥/);
+  assert.match(app, /function resetFinalApproval\(\)/);
+  assert.match(css, /\.agent-selector button\.is-approved/);
+  assert.match(css, /\.developer-response\.is-complete/);
 });
 
 test("approval uses one reusable canvas firework with reduced-motion protection", async () => {
@@ -404,7 +425,7 @@ test("the page exposes one shared invitation DOM with accessible developer contr
   assert.match(app, /setInterval\([^,]+,\s*3_500\)/s);
   assert.doesNotMatch(app, /messageInput|rsvpLog|VISITOR/);
   assert.match(app, /submit\.addEventListener\("click"/);
-  assert.match(app, /200 OK — 승인되었습니다\. ♥/);
+  assert.match(app, /FINAL APPROVAL COMPLETE — wedding-v1\.0 is ready to merge ♥/);
   assert.match(app, /length: 72/);
   assert.match(css, /\.invitation\[data-mode="developer"\]/);
   assert.match(css, /\.developer-rsvp/);
