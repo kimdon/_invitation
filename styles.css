@@ -1089,6 +1089,16 @@ body.is-developer-mode .petal-layer {
   display: block;
 }
 
+.invitation[data-mode="developer"] .developer-term {
+  color: var(--terminal-blue);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: rgba(126, 231, 135, 0.62);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+  white-space: nowrap;
+}
+
 .invitation[data-mode="developer"] .family {
   margin-top: 34px;
   border: 1px solid var(--terminal-line);

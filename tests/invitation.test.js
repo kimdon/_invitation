@@ -224,6 +224,21 @@ test("developer copy uses merge language while both modes share the requested En
   }
 });
 
+test("developer invitation terms use developer-mode-only highlight markup", async () => {
+  const [html, css] = await Promise.all([
+    readFile(new URL("../index.html", import.meta.url), "utf8"),
+    readFile(new URL("../styles.css", import.meta.url), "utf8"),
+  ]);
+  const highlightedTerms = ["branch", "commit", "conflict", "main branch", "merge", "approve"];
+
+  for (const term of highlightedTerms) {
+    assert.match(html, new RegExp(`<span class="developer-term">${term}</span>`));
+  }
+  assert.equal((html.match(/class="developer-term"/g) ?? []).length, highlightedTerms.length);
+  assert.match(css, /\.invitation\[data-mode="developer"\] \.developer-term\s*\{/);
+  assert.doesNotMatch(css, /(^|\n)\.developer-term\s*\{/);
+});
+
 test("AI guest messages contain exactly the five approved agents and complete card metadata", () => {
   assert.deepEqual(AI_GUEST_MESSAGES.map((agent) => agent.name), [
     "Codex",
