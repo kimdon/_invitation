@@ -198,9 +198,11 @@ test("buildDeveloperSequence returns the approved branch transition and wedding 
   assert.match(source, /2026-11-21 13:50/);
   assert.match(source, /보타닉 웨딩파크/);
   assert.ok(levels.includes("DEBUG"));
-  assert.ok(levels.includes("WARNING"));
-  assert.match(source, /BranchHistory/);
-  assert.match(source, /ConflictResolver/);
+  assert.ok(levels.includes("WARN"));
+  assert.match(source, /DateTest/);
+  assert.match(source, /수많은 대화와 데이트 테스트를 통과했습니다/);
+  assert.match(source, /RuntimePolicy/);
+  assert.match(source, /이제 단독 실행은 권장하지 않습니다/);
   assert.doesNotMatch(source, /forever-v1\.0|새로운 인생 버전/);
 });
 
@@ -241,6 +243,7 @@ test("AI guest messages contain exactly the five approved agents and complete ca
     assert.match(agent.iconSrc, /^\.\/images\/ai-icons\//);
     assert.match(agent.handle, /^@/);
     assert.match(agent.approved, /^APPROVED/);
+    assert.match(agent.request, /wedding-v1\.0|REVIEW|DIFF|코드|로직/);
   }
 
   const source = JSON.stringify(AI_GUEST_MESSAGES);
@@ -266,8 +269,35 @@ test("local AI icons connect selectors and the active card with accessible fallb
   assert.match(app, /image\.src = agent\.iconSrc/);
   assert.match(app, /image\.alt = ""/);
   assert.match(app, /image\.addEventListener\("error"/);
-  assert.match(app, /agent-selector__name/);
+  assert.doesNotMatch(app, /agent-selector__name/);
+  assert.doesNotMatch(css, /\.agent-selector__name/);
+  assert.match(app, /setAttribute\("aria-label", `\$\{agent\.name\} 승인 메시지 보기`\)/);
   assert.match(css, /object-fit:\s*contain/);
+});
+
+test("approval uses one reusable canvas firework with reduced-motion protection", async () => {
+  const [html, app, css] = await Promise.all([
+    readFile(new URL("../index.html", import.meta.url), "utf8"),
+    readFile(new URL("../src/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../styles.css", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(html, /<canvas class="developer-particle-layer" id="developer-particle-layer"/);
+  assert.match(app, /getContext\("2d"\)/);
+  assert.match(app, /requestAnimationFrame/);
+  assert.match(app, /cancelAnimationFrame/);
+  assert.match(app, /Math\.cos\(angle\)/);
+  assert.match(app, /Math\.sin\(angle\)/);
+  assert.match(app, /reducedMotion\.matches/);
+  assert.match(app, /globalCompositeOperation = "destination-out"/);
+  assert.doesNotMatch(app, /particle\.textContent|symbols = \[/);
+  assert.doesNotMatch(css, /@keyframes developer-particle/);
+});
+
+test("calendar uses a fixed seven-column layout so the wedding marker cannot widen Saturday", async () => {
+  const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
+
+  assert.match(css, /\.calendar\s*\{[^}]*table-layout:\s*fixed/s);
 });
 
 test("the page exposes one shared invitation DOM with accessible developer controls", async () => {
@@ -301,7 +331,7 @@ test("the page exposes one shared invitation DOM with accessible developer contr
   assert.doesNotMatch(app, /messageInput|rsvpLog|VISITOR/);
   assert.match(app, /submit\.addEventListener\("click"/);
   assert.match(app, /200 OK — 승인되었습니다\. ♥/);
-  assert.match(app, /index < 42/);
+  assert.match(app, /length: 96/);
   assert.match(css, /\.invitation\[data-mode="developer"\]/);
   assert.match(css, /\.developer-rsvp/);
   assert.match(css, /prefers-reduced-motion:\s*reduce/);

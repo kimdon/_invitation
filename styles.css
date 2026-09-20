@@ -280,6 +280,7 @@ a {
   border-collapse: collapse;
   color: #cfc4b2;
   font-size: 14px;
+  table-layout: fixed;
   text-align: center;
 }
 
@@ -1010,7 +1011,7 @@ body.is-developer-mode .petal-layer {
   color: var(--terminal-blue);
 }
 
-.developer-log-line--warning strong {
+.developer-log-line--warn strong {
   color: #f2cc60;
 }
 
@@ -1315,12 +1316,6 @@ body.is-developer-mode .petal-layer {
   place-items: center;
 }
 
-.agent-selector__name {
-  margin-top: 4px;
-  font-size: 9px;
-  line-height: 1.15;
-}
-
 .agent-selector button.is-active {
   border-color: var(--agent-accent);
   color: var(--agent-accent);
@@ -1431,21 +1426,12 @@ body.is-developer-mode .petal-layer {
   position: fixed;
   z-index: 100;
   top: 0;
-  bottom: 0;
   left: 50%;
   display: block;
   width: min(100%, 430px);
-  overflow: hidden;
+  height: 100%;
   pointer-events: none;
   transform: translateX(-50%);
-}
-
-.developer-particle-layer span {
-  position: absolute;
-  color: var(--particle-accent);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 13px;
-  animation: developer-particle 1.1s ease-out forwards;
 }
 
 .is-developer-mode .account-dialog {
@@ -1483,17 +1469,6 @@ body.is-developer-mode .petal-layer {
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes developer-particle {
-  0% {
-    opacity: 1;
-    transform: translate(0, 0) rotate(0deg);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(var(--particle-x), 260px) rotate(300deg);
   }
 }
 
