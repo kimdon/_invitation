@@ -135,11 +135,17 @@ test("the page uses the editorial invitation structure", async () => {
 });
 
 test("the stylesheet defines the approved editorial theme", async () => {
-  const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
+  const [html, css] = await Promise.all([
+    readFile(new URL("../index.html", import.meta.url), "utf8"),
+    readFile(new URL("../styles.css", import.meta.url), "utf8"),
+  ]);
 
   assert.match(css, /--paper:\s*#f4efe7/);
   assert.match(css, /--ink:\s*#1c1916/);
   assert.match(css, /--gold:\s*#b39a6e/);
+  assert.match(css, /font-family:\s*Gulim,\s*"굴림",\s*sans-serif/);
+  assert.doesNotMatch(css, /Noto Serif KR|Cormorant Garamond/);
+  assert.doesNotMatch(html, /fonts\.googleapis\.com|fonts\.gstatic\.com/);
   assert.match(css, /\.schedule-calendar\s*\{/);
   assert.match(css, /\.account-dialog\s*\{/);
   assert.match(css, /\.photo-viewer\s*\{/);
