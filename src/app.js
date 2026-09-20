@@ -1,6 +1,7 @@
 import {
   AI_GUEST_MESSAGES,
   DEVELOPER_TRANSITION_COMMANDS,
+  FIREWORK_BURST_PLAN,
   buildDeveloperSequence,
   buildCalendarWeeks,
   buildExternalMapLinks,
@@ -12,6 +13,7 @@ import {
 const GALLERY_SIZE = 25;
 const GALLERY_PER_PAGE = 9;
 const WEDDING_DATE = new Date(2026, 10, 21, 12);
+const FIREWORK_SEQUENCE_MS = FIREWORK_BURST_PLAN.at(-1).delay + 1_500;
 
 function gallerySource(number) {
   return `./images/gallery/${String(number).padStart(2, "0")}.webp`;
@@ -553,31 +555,41 @@ function setupDeveloperMode() {
     if (reducedMotion.matches || !fireworkContext) return;
 
     const bounds = fireworks.getBoundingClientRect();
-    const buttonBounds = submit.getBoundingClientRect();
     const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
     fireworks.width = Math.round(bounds.width * pixelRatio);
     fireworks.height = Math.round(bounds.height * pixelRatio);
     fireworkContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
 
-    const originX = buttonBounds.left + buttonBounds.width / 2 - bounds.left;
-    const originY = buttonBounds.top + buttonBounds.height / 2 - bounds.top;
     const colors = [agent.accent, "#7ee787", "#79c0ff", "#f2cc60", "#ff7b9c", "#f0f6fc"];
-    const burst = Array.from({ length: 96 }, (_, index) => {
-      const angle = (Math.PI * 2 * index) / 96 + (Math.random() - 0.5) * 0.09;
-      const speed = 2.8 + Math.random() * 4.2;
-      return {
-        x: originX,
-        y: originY,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        alpha: 1,
-        decay: 0.014 + Math.random() * 0.009,
-        size: 1.2 + Math.random() * 1.5,
-        color: colors[index % colors.length],
-      };
-    });
+    const pendingBursts = FIREWORK_BURST_PLAN.map((burst) => ({ ...burst }));
+    const particles = [];
+    const startedAt = performance.now();
 
-    function drawFrame() {
+    function createBurst(burst) {
+      const originX = bounds.width * burst.x;
+      const originY = bounds.height * burst.y;
+      return Array.from({ length: 72 }, (_, index) => {
+        const angle = (Math.PI * 2 * index) / 72 + (Math.random() - 0.5) * 0.08;
+        const speed = 4.5 + Math.random() * 6;
+        return {
+          x: originX,
+          y: originY,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          alpha: 1,
+          decay: 0.013 + Math.random() * 0.007,
+          size: 1.8 + Math.random() * 1.8,
+          color: colors[index % colors.length],
+        };
+      });
+    }
+
+    function drawFrame(now) {
+      const elapsed = now - startedAt;
+      while (pendingBursts[0] && elapsed >= pendingBursts[0].delay) {
+        particles.push(...createBurst(pendingBursts.shift()));
+      }
+
       fireworkContext.save();
       fireworkContext.globalCompositeOperation = "destination-out";
       fireworkContext.fillStyle = "rgba(0, 0, 0, 0.16)";
@@ -589,7 +601,7 @@ function setupDeveloperMode() {
       fireworkContext.globalCompositeOperation = "source-over";
       fireworkContext.lineCap = "round";
 
-      burst.forEach((particle) => {
+      particles.forEach((particle) => {
         if (particle.alpha <= 0) return;
         active = true;
         const previousX = particle.x;
@@ -610,7 +622,7 @@ function setupDeveloperMode() {
       });
 
       fireworkContext.restore();
-      if (active) {
+      if (pendingBursts.length || active) {
         fireworkFrame = window.requestAnimationFrame(drawFrame);
         return;
       }
@@ -641,7 +653,7 @@ function setupDeveloperMode() {
     schedule(() => {
       submit.disabled = false;
       state = "developer.ready";
-    }, 1_300);
+    }, FIREWORK_SEQUENCE_MS);
   });
 }
 
