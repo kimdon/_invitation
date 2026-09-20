@@ -181,13 +181,30 @@ test("buildDeveloperSequence returns the approved branch transition and wedding 
 
   const sequence = buildDeveloperSequence();
   const source = JSON.stringify(sequence);
+  const levels = sequence.map((entry) => entry.level);
 
   assert.match(source, /wedding-v1\.0/);
   assert.match(source, /김병관/);
   assert.match(source, /김도은/);
   assert.match(source, /2026-11-21 13:50/);
   assert.match(source, /보타닉 웨딩파크/);
+  assert.ok(levels.includes("DEBUG"));
+  assert.ok(levels.includes("WARNING"));
+  assert.match(source, /BranchHistory/);
+  assert.match(source, /ConflictResolver/);
   assert.doesNotMatch(source, /forever-v1\.0|새로운 인생 버전/);
+});
+
+test("developer copy uses merge language while both modes share the requested English name", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+
+  assert.equal((html.match(/Kim Byung-kwan/g) ?? []).length, 2);
+  assert.doesNotMatch(html, /Byeong-gwan/);
+  assert.match(html, /class="greeting greeting--normal"/);
+  assert.match(html, /class="greeting greeting--developer"/);
+  for (const term of ["branch", "commit", "conflict", "merge", "approve"]) {
+    assert.match(html, new RegExp(term));
+  }
 });
 
 test("AI guest messages contain exactly the five approved agents and complete card metadata", () => {

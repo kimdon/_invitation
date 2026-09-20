@@ -212,6 +212,10 @@ a {
   text-wrap: pretty;
 }
 
+.greeting--developer {
+  display: none;
+}
+
 .family {
   margin-top: 44px;
   padding: 26px 20px;
@@ -1002,6 +1006,14 @@ body.is-developer-mode .petal-layer {
   color: var(--terminal-green);
 }
 
+.developer-log-line--debug strong {
+  color: var(--terminal-blue);
+}
+
+.developer-log-line--warning strong {
+  color: #f2cc60;
+}
+
 .invitation[data-mode="developer"] .cover__arrow {
   color: var(--terminal-green);
 }
@@ -1065,6 +1077,14 @@ body.is-developer-mode .petal-layer {
   font-size: 14px;
   line-height: 2.1;
   text-align: left;
+}
+
+.invitation[data-mode="developer"] .greeting--normal {
+  display: none;
+}
+
+.invitation[data-mode="developer"] .greeting--developer {
+  display: block;
 }
 
 .invitation[data-mode="developer"] .family {
