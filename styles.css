@@ -935,13 +935,16 @@ a {
   height: auto;
   min-height: 0;
   flex-direction: column;
-  padding: 14px 14px 0;
+  padding: 0;
   background: var(--paper);
 }
 
 .invitation[data-mode="normal"] .cover__media {
   position: relative;
   height: clamp(500px, 125vw, 620px);
+  margin: 24px 24px 0;
+  overflow: hidden;
+  border-radius: 50% 50% 0 0 / 26% 26% 0 0;
 }
 
 .invitation[data-mode="normal"] .cover__shade,
@@ -957,10 +960,16 @@ a {
 }
 
 .invitation[data-mode="normal"] .cover__name {
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: Didot, "Bodoni Moda", "Bodoni MT", "Times New Roman", serif;
   font-size: clamp(34px, 9.5vw, 42px);
-  font-style: normal;
+  font-style: italic;
+  font-weight: 400;
   line-height: 1;
+}
+
+.invitation[data-mode="normal"] .cover__ampersand {
+  font-family: Didot, "Bodoni Moda", "Bodoni MT", "Times New Roman", serif;
+  font-style: italic;
 }
 
 .invitation[data-mode="normal"] .cover__ampersand,
@@ -1090,6 +1099,10 @@ a {
   color: var(--ink);
 }
 
+.invitation[data-mode="normal"] .map-button {
+  border-radius: 10px;
+}
+
 .invitation[data-mode="normal"] .map-button--primary,
 .invitation[data-mode="normal"] .account-button--accent {
   background: var(--ink);
@@ -1108,6 +1121,10 @@ a {
 .invitation[data-mode="normal"] .footer {
   border-top: 1px solid var(--line);
   background: var(--paper);
+}
+
+.invitation[data-mode="normal"] .footer__monogram {
+  display: none;
 }
 
 body:not(.is-developer-mode) .account-dialog {
