@@ -22,6 +22,14 @@ The normal-mode greeting remains unchanged. Developer mode shows a separate gree
 
 Both greetings stay in the existing section and CSS selects the appropriate one using the invitation mode. No JavaScript text swapping is introduced.
 
+## Display name and boot logs
+
+- Keep the Korean name `김병관` unchanged.
+- Change the groom's English display name in both normal and developer modes to `Kim Byung-kwan`.
+- Extend the developer boot sequence with `DEBUG BranchHistory : commit history synchronized`.
+- Extend the developer boot sequence with `WARNING ConflictResolver : minor conflicts resolved with trust`.
+- Preserve the existing deployment, profile, schedule, venue, and success log entries.
+
 ## Approval interaction
 
 - Remove the visitor comment label, input, and visitor log.
@@ -33,6 +41,6 @@ Both greetings stay in the existing section and CSS selects the appropriate one 
 
 ## Scope and verification
 
-Only `index.html`, `src/app.js`, `styles.css`, and the existing tests are changed. Existing normal-mode content, AI rotation, maps, gallery, accounts, and developer transition stay intact.
+Only `index.html`, `src/app.js`, `src/invitation.js`, `styles.css`, and the existing tests are changed. Existing Korean names, AI rotation, maps, gallery, accounts, and developer transition stay intact.
 
-Automated checks verify the separate developer greeting, absence of comment controls and visitor-log behavior, the new approval response, and retained fireworks wiring. A browser smoke test verifies normal/developer copy switching, approval behavior, repeated clicks, reduced horizontal overflow, and console errors.
+Automated checks verify the separate developer greeting, English display name, DEBUG and WARNING boot entries, absence of comment controls and visitor-log behavior, the new approval response, and retained fireworks wiring. A browser smoke test verifies normal/developer copy switching, approval behavior, repeated clicks, reduced horizontal overflow, and console errors.
