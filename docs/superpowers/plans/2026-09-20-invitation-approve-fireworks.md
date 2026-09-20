@@ -264,7 +264,182 @@ git add index.html src/app.js styles.css tests/invitation.test.js
 git commit -m "feat: simplify developer approval fireworks"
 ```
 
-### Task 3: Full verification
+### Task 3: Official local AI icons
+
+**Files:**
+- Create: `images/ai-icons/codex.png`
+- Create: `images/ai-icons/claude.png`
+- Create: `images/ai-icons/cursor.svg`
+- Create: `images/ai-icons/kimi.svg`
+- Create: `images/ai-icons/gemini.png`
+- Create: `images/ai-icons/SOURCES.md`
+- Modify: `src/invitation.js:20-64`
+- Modify: `src/app.js:367-438`
+- Modify: `styles.css:1240-1315`
+- Modify: `tests/invitation.test.js:210-239`
+
+- [ ] **Step 1: Write the failing icon contract tests**
+
+Require `iconSrc` on exactly the five approved agents and lock it to local files:
+
+```js
+assert.deepEqual(AI_GUEST_MESSAGES.map((agent) => agent.iconSrc), [
+  "./images/ai-icons/codex.png",
+  "./images/ai-icons/claude.png",
+  "./images/ai-icons/cursor.svg",
+  "./images/ai-icons/kimi.svg",
+  "./images/ai-icons/gemini.png",
+]);
+for (const agent of AI_GUEST_MESSAGES) {
+  assert.ok(agent.icon, "text fallback is required");
+  assert.match(agent.iconSrc, /^\.\/images\/ai-icons\//);
+}
+```
+
+Read each asset with `readFile`, assert it is non-empty, and assert the app/CSS contract:
+
+```js
+assert.match(app, /function createAgentIconVisual\(/);
+assert.match(app, /image\.src = agent\.iconSrc/);
+assert.match(app, /image\.alt = ""/);
+assert.match(app, /image\.addEventListener\("error"/);
+assert.match(app, /agent-selector__name/);
+assert.match(css, /object-fit:\s*contain/);
+```
+
+- [ ] **Step 2: Run the icon tests and confirm RED**
+
+Run:
+
+```bash
+npm test -- --test-name-pattern="AI guest messages|local AI icons"
+```
+
+Expected: FAIL because no `iconSrc` data or local icon assets exist.
+
+- [ ] **Step 3: Acquire the official assets locally**
+
+Store the assets at the paths above using these official sources:
+
+```text
+Codex: OpenAI official app icon from https://help.openai.com/en/articles/7905742-what-does-the-official-chatgpt-ios-app-icon-look-like
+Claude: Claude official favicon from https://assets.claude.com/95a868946ac8a31e5ff832e2899f294aa368b836.png?w=64&h=64
+Cursor: CUBE_2D_DARK.svg from the official https://cursor.com/brand asset archive
+Kimi: Logomark_Light.svg from the official https://www.kimi.com/en/resources/kimi-brand asset archive
+Gemini: official Gemini sparkle PNG from https://www.gstatic.com/lamda/images/gemini_sparkle_4g_512_lt_f94943af3be039176192d.png
+```
+
+Record the source page, direct asset/archive URL, archive member when applicable, and local path in `images/ai-icons/SOURCES.md`. Keep the raster files small enough for mobile use and do not hotlink them from HTML or JavaScript.
+
+- [ ] **Step 4: Add icon paths without removing text fallbacks**
+
+Add one `iconSrc` property to each existing `AI_GUEST_MESSAGES` entry:
+
+```js
+iconSrc: "./images/ai-icons/codex.png",
+iconSrc: "./images/ai-icons/claude.png",
+iconSrc: "./images/ai-icons/cursor.svg",
+iconSrc: "./images/ai-icons/kimi.svg",
+iconSrc: "./images/ai-icons/gemini.png",
+```
+
+Keep each existing `icon` property as the load-failure fallback.
+
+- [ ] **Step 5: Render the same image helper in selectors and the active card**
+
+Add this helper inside `setupDeveloperMode`:
+
+```js
+function createAgentIconVisual(agent, className) {
+  const frame = document.createElement("span");
+  const fallback = document.createElement("span");
+  const image = document.createElement("img");
+  frame.className = className;
+  fallback.className = "agent-icon__fallback";
+  fallback.textContent = agent.icon;
+  fallback.setAttribute("aria-hidden", "true");
+  image.className = "agent-icon__image";
+  image.alt = "";
+  image.src = agent.iconSrc;
+  image.addEventListener("error", () => image.remove(), { once: true });
+  frame.append(fallback, image);
+  return frame;
+}
+```
+
+In `renderAgent`, replace the active card's icon content with `createAgentIconVisual(agent, "agent-review__visual")`. In each selector button, append `createAgentIconVisual(agent, "agent-selector__visual")` plus a visible `.agent-selector__name` span containing `agent.name`. Keep the button's existing Korean `aria-label`.
+
+- [ ] **Step 6: Size icons consistently for the dark terminal**
+
+```css
+.agent-selector button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.agent-selector__visual,
+.agent-review__visual {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.agent-selector__visual {
+  width: 24px;
+  height: 24px;
+}
+
+.agent-review__visual {
+  width: 30px;
+  height: 30px;
+}
+
+.agent-icon__image,
+.agent-icon__fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.agent-icon__image {
+  z-index: 1;
+  background: var(--terminal-panel);
+  object-fit: contain;
+}
+
+.agent-icon__fallback {
+  display: grid;
+  place-items: center;
+}
+
+.agent-selector__name {
+  margin-top: 4px;
+  font-size: 9px;
+  line-height: 1.15;
+}
+```
+
+- [ ] **Step 7: Run the icon tests and confirm GREEN**
+
+Run:
+
+```bash
+npm test -- --test-name-pattern="AI guest messages|local AI icons"
+```
+
+Expected: both matching tests PASS.
+
+- [ ] **Step 8: Commit the official icon slice**
+
+```bash
+git add images/ai-icons src/invitation.js src/app.js styles.css tests/invitation.test.js
+git commit -m "feat: use official AI icons in developer review"
+```
+
+### Task 4: Full verification
 
 **Files:**
 - Verify: `index.html`
@@ -297,6 +472,7 @@ Boot output contains DEBUG and WARNING lines and finishes with wedding-v1.0 depl
 No comment label, text input, or visitor log is present.
 APPROVE ♥ reveals the selected AI approval plus 200 OK — 승인되었습니다. ♥.
 Each enabled click launches 42 particles; a later click launches them again.
+All five selectors and the active card show local official images with visible labels, and a broken image falls back to the original text symbol.
 Document scroll width equals client width, and browser error logs are empty.
 ```
 
