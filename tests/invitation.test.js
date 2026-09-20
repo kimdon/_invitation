@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 
 import {
@@ -11,6 +12,14 @@ import {
   buildExternalMapLinks,
   getDdayDisplay,
 } from "../src/invitation.js";
+
+const EXPECTED_AI_ICON_PATHS = [
+  "./images/ai-icons/codex.png",
+  "./images/ai-icons/claude.png",
+  "./images/ai-icons/cursor.svg",
+  "./images/ai-icons/kimi.svg",
+  "./images/ai-icons/gemini.png",
+];
 
 test("buildCalendarWeeks returns every day in November 2026", () => {
   const weeks = buildCalendarWeeks(2026, 10, 21);
@@ -216,6 +225,7 @@ test("AI guest messages contain exactly the five approved agents and complete ca
     "Gemini · 제미나이",
   ]);
   assert.equal(new Set(AI_GUEST_MESSAGES.map((agent) => agent.accent)).size, 5);
+  assert.deepEqual(AI_GUEST_MESSAGES.map((agent) => agent.iconSrc), EXPECTED_AI_ICON_PATHS);
 
   for (const agent of AI_GUEST_MESSAGES) {
     assert.deepEqual(Object.keys(agent).sort(), [
@@ -223,10 +233,12 @@ test("AI guest messages contain exactly the five approved agents and complete ca
       "approved",
       "handle",
       "icon",
+      "iconSrc",
       "name",
       "request",
     ]);
-    assert.ok(agent.icon);
+    assert.ok(agent.icon, "text fallback is required");
+    assert.match(agent.iconSrc, /^\.\/images\/ai-icons\//);
     assert.match(agent.handle, /^@/);
     assert.match(agent.approved, /^APPROVED/);
   }
@@ -237,6 +249,25 @@ test("AI guest messages contain exactly the five approved agents and complete ca
   assert.doesNotMatch(source, /Grok|ChatGPT|WeddingBot/);
   assert.equal(new Set(AI_GUEST_MESSAGES.map((agent) => agent.request)).size, 5);
   assert.equal(new Set(AI_GUEST_MESSAGES.map((agent) => agent.approved)).size, 5);
+});
+
+test("local AI icons connect selectors and the active card with accessible fallbacks", async () => {
+  const [app, css] = await Promise.all([
+    readFile(new URL("../src/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../styles.css", import.meta.url), "utf8"),
+  ]);
+
+  for (const iconPath of EXPECTED_AI_ICON_PATHS) {
+    const assetUrl = new URL(`../${iconPath.replace("./", "")}`, import.meta.url);
+    assert.equal(existsSync(assetUrl), true, `${iconPath} should exist locally`);
+  }
+
+  assert.match(app, /function createAgentIconVisual\(/);
+  assert.match(app, /image\.src = agent\.iconSrc/);
+  assert.match(app, /image\.alt = ""/);
+  assert.match(app, /image\.addEventListener\("error"/);
+  assert.match(app, /agent-selector__name/);
+  assert.match(css, /object-fit:\s*contain/);
 });
 
 test("the page exposes one shared invitation DOM with accessible developer controls", async () => {

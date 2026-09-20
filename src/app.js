@@ -392,11 +392,28 @@ function setupDeveloperMode() {
     window.scrollTo({ top: bottom - window.innerHeight, behavior: "smooth" });
   }
 
+  function createAgentIconVisual(agent, className) {
+    const frame = document.createElement("span");
+    const fallback = document.createElement("span");
+    const image = document.createElement("img");
+    frame.className = className;
+    frame.setAttribute("aria-hidden", "true");
+    fallback.className = "agent-icon__fallback";
+    fallback.textContent = agent.icon;
+    fallback.setAttribute("aria-hidden", "true");
+    image.className = "agent-icon__image";
+    image.alt = "";
+    image.src = agent.iconSrc;
+    image.addEventListener("error", () => image.remove(), { once: true });
+    frame.append(fallback, image);
+    return frame;
+  }
+
   function renderAgent(requestedIndex) {
     agentIndex = (requestedIndex + AI_GUEST_MESSAGES.length) % AI_GUEST_MESSAGES.length;
     const agent = AI_GUEST_MESSAGES[agentIndex];
     card.style.setProperty("--agent-accent", agent.accent);
-    icon.textContent = agent.icon;
+    icon.replaceChildren(createAgentIconVisual(agent, "agent-review__visual"));
     name.textContent = agent.name;
     handle.textContent = agent.handle;
     request.textContent = agent.request;
@@ -423,11 +440,14 @@ function setupDeveloperMode() {
 
   AI_GUEST_MESSAGES.forEach((agent, index) => {
     const button = document.createElement("button");
+    const label = document.createElement("span");
     button.type = "button";
-    button.textContent = agent.icon;
     button.setAttribute("aria-label", `${agent.name} 승인 메시지 보기`);
     button.setAttribute("aria-pressed", "false");
     button.style.setProperty("--agent-accent", agent.accent);
+    label.className = "agent-selector__name";
+    label.textContent = agent.name;
+    button.append(createAgentIconVisual(agent, "agent-selector__visual"), label);
     button.addEventListener("click", () => resetAgentRotation(index));
     selector.appendChild(button);
   });

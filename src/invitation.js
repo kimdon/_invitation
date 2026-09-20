@@ -24,6 +24,7 @@ export const WEDDING_RELEASE = "wedding-v1.0";
 export const AI_GUEST_MESSAGES = Object.freeze([
   Object.freeze({
     icon: ">_",
+    iconSrc: "./images/ai-icons/codex.png",
     name: "Codex",
     handle: "@codex",
     accent: "#58a6ff",
@@ -32,6 +33,7 @@ export const AI_GUEST_MESSAGES = Object.freeze([
   }),
   Object.freeze({
     icon: "C:",
+    iconSrc: "./images/ai-icons/claude.png",
     name: "Claude",
     handle: "@claude",
     accent: "#f2a65a",
@@ -40,6 +42,7 @@ export const AI_GUEST_MESSAGES = Object.freeze([
   }),
   Object.freeze({
     icon: "▮_",
+    iconSrc: "./images/ai-icons/cursor.svg",
     name: "Cursor",
     handle: "@cursor",
     accent: "#d2a8ff",
@@ -48,6 +51,7 @@ export const AI_GUEST_MESSAGES = Object.freeze([
   }),
   Object.freeze({
     icon: "K*",
+    iconSrc: "./images/ai-icons/kimi.svg",
     name: "Kimi · 키미",
     handle: "@kimi",
     accent: "#7ee787",
@@ -56,6 +60,7 @@ export const AI_GUEST_MESSAGES = Object.freeze([
   }),
   Object.freeze({
     icon: "✦",
+    iconSrc: "./images/ai-icons/gemini.png",
     name: "Gemini · 제미나이",
     handle: "@gemini",
     accent: "#ff7b9c",

@@ -1264,6 +1264,10 @@ body.is-developer-mode .petal-layer {
 }
 
 .agent-selector button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   min-width: 0;
   min-height: 44px;
   border: 1px solid #315b40;
@@ -1273,6 +1277,48 @@ body.is-developer-mode .petal-layer {
   cursor: pointer;
   font-family: inherit;
   font-size: 12px;
+}
+
+.agent-selector__visual,
+.agent-review__visual {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.agent-selector__visual {
+  width: 24px;
+  height: 24px;
+}
+
+.agent-review__visual {
+  width: 30px;
+  height: 30px;
+}
+
+.agent-icon__image,
+.agent-icon__fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.agent-icon__image {
+  z-index: 1;
+  background: var(--terminal-panel);
+  object-fit: contain;
+}
+
+.agent-icon__fallback {
+  display: grid;
+  place-items: center;
+}
+
+.agent-selector__name {
+  margin-top: 4px;
+  font-size: 9px;
+  line-height: 1.15;
 }
 
 .agent-selector button.is-active {
