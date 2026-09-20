@@ -1,13 +1,13 @@
 :root {
   color-scheme: light;
-  --canvas: #eae4da;
-  --paper: #f4efe7;
-  --ink: #1c1916;
-  --text: #2b2724;
-  --muted: #8a7a5c;
-  --gold: #b39a6e;
-  --gold-strong: #d3b788;
-  --line: #d9cfb9;
+  --canvas: #ececeb;
+  --paper: #ffffff;
+  --ink: #111111;
+  --text: #292929;
+  --muted: #747474;
+  --gold: #111111;
+  --gold-strong: #111111;
+  --line: #dedede;
 }
 
 * {
@@ -928,6 +928,210 @@ a {
 
 .developer-transition__lines .is-success {
   color: #7ee787;
+}
+
+.invitation[data-mode="normal"] .cover {
+  display: flex;
+  height: auto;
+  min-height: 0;
+  flex-direction: column;
+  padding: 14px 14px 0;
+  background: var(--paper);
+}
+
+.invitation[data-mode="normal"] .cover__media {
+  position: relative;
+  height: clamp(500px, 125vw, 620px);
+}
+
+.invitation[data-mode="normal"] .cover__shade,
+.invitation[data-mode="normal"] .cover__arrow,
+.invitation[data-mode="normal"] .petal-layer {
+  display: none;
+}
+
+.invitation[data-mode="normal"] .cover__content {
+  position: relative;
+  padding: 30px 18px 48px;
+  color: var(--ink);
+}
+
+.invitation[data-mode="normal"] .cover__name {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(34px, 9.5vw, 42px);
+  font-style: normal;
+  line-height: 1;
+}
+
+.invitation[data-mode="normal"] .cover__ampersand,
+.invitation[data-mode="normal"] .cover__date {
+  color: var(--ink);
+}
+
+.invitation[data-mode="normal"] .cover__date {
+  font-size: 12px;
+  letter-spacing: 0.25em;
+}
+
+.invitation[data-mode="normal"] .mode-toggle {
+  border-color: var(--ink);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink);
+}
+
+.invitation[data-mode="normal"] .section {
+  padding: 68px 40px;
+  border-top: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--text);
+}
+
+.invitation[data-mode="normal"] .section--dark {
+  background: var(--paper);
+  color: var(--text);
+}
+
+.invitation[data-mode="normal"] .section-kicker {
+  color: var(--ink);
+  font-style: normal;
+  font-weight: 600;
+}
+
+.invitation[data-mode="normal"] .section-rule,
+.invitation[data-mode="normal"] .section-rule--dark {
+  width: 34px;
+  height: 1px;
+  margin: 20px auto 30px;
+  background: var(--ink);
+}
+
+.invitation[data-mode="normal"] .family {
+  padding: 25px 0 0;
+  border-top: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+}
+
+.invitation[data-mode="normal"] .family span,
+.invitation[data-mode="normal"] .family strong {
+  color: var(--text);
+}
+
+.invitation[data-mode="normal"] .schedule__date,
+.invitation[data-mode="normal"] .schedule__time,
+.invitation[data-mode="normal"] .schedule__venue,
+.invitation[data-mode="normal"] .calendar,
+.invitation[data-mode="normal"] .dday-copy,
+.invitation[data-mode="normal"] .thanks__copy {
+  color: var(--text);
+}
+
+.invitation[data-mode="normal"] .schedule__date {
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.invitation[data-mode="normal"] .calendar-wrap,
+.invitation[data-mode="normal"] .dday-copy {
+  border-color: var(--line);
+}
+
+.invitation[data-mode="normal"] .calendar__month,
+.invitation[data-mode="normal"] .calendar th,
+.invitation[data-mode="normal"] .calendar .sunday {
+  color: var(--muted);
+}
+
+.invitation[data-mode="normal"] .calendar__wedding-day {
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.invitation[data-mode="normal"] .gallery-grid {
+  padding: 0 14px;
+  gap: 7px;
+}
+
+.invitation[data-mode="normal"] .gallery-item {
+  border: 1px solid var(--ink);
+  background: #f2f2f2;
+}
+
+.invitation[data-mode="normal"] .gallery-placeholder {
+  background: #f2f2f2;
+  color: var(--muted);
+}
+
+.invitation[data-mode="normal"] .gallery-arrow {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.invitation[data-mode="normal"] .gallery-dot.is-active {
+  background: var(--ink);
+}
+
+.invitation[data-mode="normal"] .map-frame {
+  border-color: var(--ink);
+}
+
+.invitation[data-mode="normal"] .media-placeholder--map {
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.72)),
+    repeating-linear-gradient(45deg, #d7d7d7 0 1px, transparent 1px 16px),
+    #f2f2f2;
+  color: var(--text);
+}
+
+.invitation[data-mode="normal"] .map-button,
+.invitation[data-mode="normal"] .account-button {
+  border-color: var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.invitation[data-mode="normal"] .map-button--primary,
+.invitation[data-mode="normal"] .account-button--accent {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.invitation[data-mode="normal"] .transport,
+.invitation[data-mode="normal"] .location__address {
+  color: var(--text);
+}
+
+.invitation[data-mode="normal"] .transport strong {
+  color: var(--muted);
+}
+
+.invitation[data-mode="normal"] .footer {
+  border-top: 1px solid var(--line);
+  background: var(--paper);
+}
+
+body:not(.is-developer-mode) .account-dialog {
+  background: var(--paper);
+  color: var(--text);
+}
+
+body:not(.is-developer-mode) .account-row {
+  border-color: var(--line);
+}
+
+body:not(.is-developer-mode) .account-row__role,
+body:not(.is-developer-mode) .account-row__holder {
+  color: var(--muted);
+}
+
+body:not(.is-developer-mode) .account-row__copy {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+body:not(.is-developer-mode) .dialog__close {
+  background: #f0f0f0;
+  color: var(--ink);
 }
 
 body.is-developer-mode {

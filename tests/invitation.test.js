@@ -147,22 +147,23 @@ test("the page uses the editorial invitation structure", async () => {
   assert.doesNotMatch(html, /<x-dc|<sc-if|<sc-for|image-slot|support\.js/);
 });
 
-test("the stylesheet defines the approved editorial theme", async () => {
+test("the stylesheet defines the approved pure-white normal mode", async () => {
   const [html, css] = await Promise.all([
     readFile(new URL("../index.html", import.meta.url), "utf8"),
     readFile(new URL("../styles.css", import.meta.url), "utf8"),
   ]);
 
-  assert.match(css, /--paper:\s*#f4efe7/);
-  assert.match(css, /--ink:\s*#1c1916/);
-  assert.match(css, /--gold:\s*#b39a6e/);
+  assert.match(html, /<meta name="theme-color" content="#ffffff">/);
+  assert.match(css, /--canvas:\s*#ececeb/);
+  assert.match(css, /--paper:\s*#ffffff/);
+  assert.match(css, /--ink:\s*#111111/);
   assert.match(css, /font-family:\s*Gulim,\s*"굴림",\s*sans-serif/);
-  assert.doesNotMatch(css, /Noto Serif KR|Cormorant Garamond/);
   assert.doesNotMatch(html, /fonts\.googleapis\.com|fonts\.gstatic\.com/);
-  assert.match(css, /\.schedule-calendar\s*\{/);
-  assert.match(css, /\.calendar\s*\{[^}]*table-layout:\s*fixed/s);
-  assert.match(css, /\.account-dialog\s*\{/);
-  assert.match(css, /\.photo-viewer\s*\{/);
+  assert.match(css, /\.invitation\[data-mode="normal"\] \.cover\s*\{/);
+  assert.match(css, /\.invitation\[data-mode="normal"\] \.section--dark\s*\{[^}]*background:\s*var\(--paper\)/s);
+  assert.match(css, /\.invitation\[data-mode="normal"\] \.gallery-item\s*\{[^}]*border:\s*1px solid var\(--ink\)/s);
+  assert.match(css, /\.invitation\[data-mode="normal"\] \.calendar__wedding-day\s*\{[^}]*border-radius:\s*50%[^}]*background:\s*var\(--ink\)[^}]*color:\s*var\(--paper\)/s);
+  assert.match(css, /\.invitation\[data-mode="developer"\] \.section\s*\{/);
   assert.match(css, /\.photo-viewer__content\s*\{[^}]*touch-action:\s*none/s);
   assert.match(css, /@media\s*\(prefers-reduced-motion:\s*reduce\)/);
 });
@@ -212,10 +213,11 @@ test("buildDeveloperSequence returns the approved branch transition and wedding 
   assert.doesNotMatch(source, /forever-v1\.0|새로운 인생 버전/);
 });
 
-test("developer copy uses merge language while both modes share the requested English name", async () => {
+test("normal mode omits the groom family name while developer branding keeps it", async () => {
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
 
-  assert.equal((html.match(/Kim Byung-kwan/g) ?? []).length, 2);
+  assert.match(html, /class="cover__name">Byung-kwan<\/p>/);
+  assert.equal((html.match(/Kim Byung-kwan/g) ?? []).length, 1);
   assert.doesNotMatch(html, /Byeong-gwan/);
   assert.match(html, /class="greeting greeting--normal"/);
   assert.match(html, /class="greeting greeting--developer"/);
