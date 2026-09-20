@@ -137,7 +137,7 @@ test("the page uses the editorial invitation structure", async () => {
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
 
   assert.match(html, /class="cover cover--editorial"/);
-  assert.match(html, /Byeong-gwan/);
+  assert.match(html, /Kim Byung-kwan/);
   assert.match(html, /Do-eun/);
   assert.match(html, /class="section section--dark schedule-calendar/);
   assert.match(html, /id="account-dialog"/);
