@@ -1,4 +1,7 @@
 import {
+  AI_GUEST_MESSAGES,
+  DEVELOPER_TRANSITION_COMMANDS,
+  buildDeveloperSequence,
   buildCalendarWeeks,
   buildExternalMapLinks,
   buildGalleryPage,
@@ -318,6 +321,249 @@ function setupMapLinks() {
   document.getElementById("naver-link").href = links.naver;
 }
 
+function setupDeveloperMode() {
+  const invitation = document.querySelector(".invitation");
+  const toggle = document.getElementById("developer-toggle");
+  const transition = document.getElementById("developer-transition");
+  const transitionLines = document.getElementById("developer-transition-lines");
+  const consoleLog = document.getElementById("developer-console-log");
+  const selector = document.getElementById("ai-agent-selector");
+  const card = document.getElementById("ai-agent-card");
+  const icon = document.getElementById("ai-agent-icon");
+  const name = document.getElementById("ai-agent-name");
+  const handle = document.getElementById("ai-agent-handle");
+  const request = document.getElementById("ai-agent-request");
+  const approved = document.getElementById("ai-agent-approved");
+  const form = document.getElementById("developer-congratulations-form");
+  const messageInput = document.getElementById("visitor-message");
+  const submit = document.getElementById("developer-congratulations");
+  const rsvpLog = document.getElementById("developer-rsvp-log");
+  const response = document.getElementById("developer-response");
+  const particles = document.getElementById("developer-particle-layer");
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const timers = new Set();
+  let sequenceId = 0;
+  let agentIndex = 0;
+  let agentInterval = null;
+  let state = "normal";
+
+  function schedule(callback, delay) {
+    const timer = window.setTimeout(() => {
+      timers.delete(timer);
+      callback();
+    }, reducedMotion.matches ? 0 : delay);
+    timers.add(timer);
+    return timer;
+  }
+
+  function wait(delay) {
+    return new Promise((resolve) => schedule(resolve, delay));
+  }
+
+  function stopAgentRotation() {
+    if (!agentInterval) return;
+    window.clearInterval(agentInterval);
+    agentInterval = null;
+  }
+
+  function cancelAnimations() {
+    sequenceId += 1;
+    timers.forEach((timer) => window.clearTimeout(timer));
+    timers.clear();
+    stopAgentRotation();
+    particles.replaceChildren();
+  }
+
+  function createLogLine(entry, time) {
+    const line = document.createElement("p");
+    const timestamp = document.createElement("time");
+    const level = document.createElement("strong");
+    const logger = document.createElement("span");
+
+    timestamp.textContent = time;
+    level.textContent = entry.level;
+    logger.textContent = entry.logger;
+    line.className = `developer-log-line developer-log-line--${entry.level.toLowerCase()}`;
+    line.append(timestamp, " ", level, " ", logger, " : ", entry.message);
+    return line;
+  }
+
+  function scrollToLatest(line) {
+    if (reducedMotion.matches) return;
+    const bottom = window.scrollY + line.getBoundingClientRect().bottom + 28;
+    if (bottom <= window.scrollY + window.innerHeight) return;
+    window.scrollTo({ top: bottom - window.innerHeight, behavior: "smooth" });
+  }
+
+  function renderAgent(requestedIndex) {
+    agentIndex = (requestedIndex + AI_GUEST_MESSAGES.length) % AI_GUEST_MESSAGES.length;
+    const agent = AI_GUEST_MESSAGES[agentIndex];
+    card.style.setProperty("--agent-accent", agent.accent);
+    icon.textContent = agent.icon;
+    name.textContent = agent.name;
+    handle.textContent = agent.handle;
+    request.textContent = agent.request;
+    approved.textContent = agent.approved;
+    approved.hidden = true;
+
+    selector.querySelectorAll("button").forEach((button, index) => {
+      const selected = index === agentIndex;
+      button.setAttribute("aria-pressed", String(selected));
+      button.classList.toggle("is-active", selected);
+    });
+  }
+
+  function startAgentRotation() {
+    stopAgentRotation();
+    if (reducedMotion.matches || invitation.dataset.mode !== "developer") return;
+    agentInterval = window.setInterval(() => renderAgent(agentIndex + 1), 3_500);
+  }
+
+  function resetAgentRotation(index) {
+    renderAgent(index);
+    startAgentRotation();
+  }
+
+  AI_GUEST_MESSAGES.forEach((agent, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = agent.icon;
+    button.setAttribute("aria-label", `${agent.name} 승인 메시지 보기`);
+    button.setAttribute("aria-pressed", "false");
+    button.style.setProperty("--agent-accent", agent.accent);
+    button.addEventListener("click", () => resetAgentRotation(index));
+    selector.appendChild(button);
+  });
+  renderAgent(0);
+
+  function appendTransition(text, success = false) {
+    const line = document.createElement("p");
+    line.className = success ? "is-success" : "";
+    line.textContent = success ? text : `$ ${text}`;
+    transitionLines.appendChild(line);
+  }
+
+  async function renderWeddingBoot(id) {
+    const times = [
+      "13:49:58.000",
+      "13:49:58.214",
+      "13:49:58.351",
+      "13:49:58.629",
+      "13:49:59.050",
+      "13:49:59.421",
+      "13:50:00.000",
+    ];
+    consoleLog.replaceChildren();
+    consoleLog.setAttribute("aria-busy", "true");
+
+    for (const [index, entry] of buildDeveloperSequence().entries()) {
+      await wait(index === 0 ? 120 : 360);
+      if (id !== sequenceId || invitation.dataset.mode !== "developer") return;
+      const line = createLogLine(entry, times[index]);
+      consoleLog.appendChild(line);
+      scrollToLatest(line);
+    }
+
+    consoleLog.setAttribute("aria-busy", "false");
+    state = "developer.ready";
+    startAgentRotation();
+  }
+
+  async function enterDeveloperMode() {
+    cancelAnimations();
+    const id = sequenceId;
+    state = "switching";
+    invitation.dataset.mode = "switching";
+    document.body.classList.add("is-developer-mode", "is-switching-mode");
+    toggle.setAttribute("aria-pressed", "true");
+    toggle.disabled = true;
+    transitionLines.replaceChildren();
+    transition.hidden = false;
+    window.scrollTo({ top: 0, behavior: reducedMotion.matches ? "auto" : "smooth" });
+
+    for (const command of DEVELOPER_TRANSITION_COMMANDS) {
+      appendTransition(command);
+      await wait(550);
+      if (id !== sequenceId) return;
+    }
+    appendTransition("Switched to branch 'develop' ✓", true);
+    await wait(300);
+    if (id !== sequenceId) return;
+
+    transitionLines.replaceChildren();
+    transition.hidden = true;
+    invitation.dataset.mode = "developer";
+    document.body.classList.remove("is-switching-mode");
+    toggle.disabled = false;
+    state = "developer.booting";
+    renderWeddingBoot(id);
+  }
+
+  function leaveDeveloperMode() {
+    cancelAnimations();
+    state = "normal";
+    invitation.dataset.mode = "normal";
+    document.body.classList.remove("is-developer-mode", "is-switching-mode");
+    toggle.setAttribute("aria-pressed", "false");
+    toggle.disabled = false;
+    transition.hidden = true;
+    transitionLines.replaceChildren();
+    consoleLog.replaceChildren();
+    rsvpLog.replaceChildren();
+    response.hidden = true;
+    approved.hidden = true;
+    messageInput.value = "";
+    window.scrollTo({ top: 0, behavior: reducedMotion.matches ? "auto" : "smooth" });
+  }
+
+  function launchParticles(agent) {
+    particles.replaceChildren();
+    if (reducedMotion.matches) return;
+    const symbols = ["♥", "{ }", "< />", agent.icon, "*", "+"];
+    for (let index = 0; index < 42; index += 1) {
+      const particle = document.createElement("span");
+      particle.textContent = symbols[index % symbols.length];
+      particle.style.left = `${12 + Math.random() * 76}%`;
+      particle.style.top = `${48 + Math.random() * 12}%`;
+      particle.style.setProperty("--particle-accent", agent.accent);
+      particle.style.setProperty("--particle-x", `${-80 + Math.random() * 160}px`);
+      particle.style.animationDelay = `${Math.random() * 120}ms`;
+      particles.appendChild(particle);
+    }
+    schedule(() => particles.replaceChildren(), 1_300);
+  }
+
+  toggle.addEventListener("click", () => {
+    if (invitation.dataset.mode === "normal") {
+      enterDeveloperMode();
+      return;
+    }
+    leaveDeveloperMode();
+  });
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (state !== "developer.ready" && state !== "celebrated") return;
+    const agent = AI_GUEST_MESSAGES[agentIndex];
+    const message = messageInput.value.trim() || "두 분의 새로운 시작을 축하합니다!";
+    const line = document.createElement("p");
+    const label = document.createElement("strong");
+    label.textContent = "VISITOR";
+    line.append(label, ` : ${message}`);
+    rsvpLog.appendChild(line);
+    approved.hidden = false;
+    response.textContent = "200 OK — 축하의 마음이 전달되었습니다.";
+    response.hidden = false;
+    submit.disabled = true;
+    state = "celebrated";
+    launchParticles(agent);
+    schedule(() => {
+      submit.disabled = false;
+      state = "developer.ready";
+    }, 1_300);
+  });
+}
+
 function setupRevealAnimations() {
   const sections = document.querySelectorAll(".fade-section");
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) {
@@ -370,5 +616,6 @@ const openViewer = setupPhotoViewer();
 setupGallery(openViewer);
 setupAccountDialog();
 setupMapLinks();
+setupDeveloperMode();
 setupRevealAnimations();
 addPetals();

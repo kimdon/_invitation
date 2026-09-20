@@ -13,6 +13,71 @@ const ACCOUNT_GROUPS = {
   ],
 };
 
+export const DEVELOPER_TRANSITION_COMMANDS = Object.freeze([
+  "git fetch origin",
+  "git pull --ff-only",
+  "git switch develop",
+]);
+
+export const WEDDING_RELEASE = "wedding-v1.0";
+
+export const AI_GUEST_MESSAGES = Object.freeze([
+  Object.freeze({
+    icon: ">_",
+    name: "Codex",
+    handle: "@codex",
+    accent: "#58a6ff",
+    request: "두 사람의 새 출발을 검토하고 승인해 주세요.",
+    approved: "APPROVED — 함께할 미래가 안정적으로 통합되었습니다.",
+  }),
+  Object.freeze({
+    icon: "C:",
+    name: "Claude",
+    handle: "@claude",
+    accent: "#f2a65a",
+    request: "두 사람의 약속이 따뜻하게 배포되도록 승인해 주세요.",
+    approved: "APPROVED — 배려와 신뢰가 프로덕션에 반영되었습니다.",
+  }),
+  Object.freeze({
+    icon: "▮_",
+    name: "Cursor",
+    handle: "@cursor",
+    accent: "#d2a8ff",
+    request: "wedding-v1.0의 다음 줄을 함께 완성해 주세요.",
+    approved: "APPROVED — 두 사람의 공동 작업공간이 열렸습니다.",
+  }),
+  Object.freeze({
+    icon: "K*",
+    name: "Kimi · 키미",
+    handle: "@kimi",
+    accent: "#7ee787",
+    request: "긴 여정의 컨텍스트를 함께 읽고 승인해 주세요.",
+    approved: "APPROVED — 평생의 컨텍스트가 안전하게 확장되었습니다.",
+  }),
+  Object.freeze({
+    icon: "✦",
+    name: "Gemini · 제미나이",
+    handle: "@gemini",
+    accent: "#ff7b9c",
+    request: "두 개의 마음이 하나의 릴리스가 되도록 승인해 주세요.",
+    approved: "APPROVED — wedding-v1.0이 밝게 릴리스되었습니다.",
+  }),
+]);
+
+const DEVELOPER_SEQUENCE = Object.freeze([
+  Object.freeze({ level: "DEPLOY", logger: WEDDING_RELEASE, message: "wedding-v1.0 배포를 시작합니다." }),
+  Object.freeze({ level: "INFO", logger: "GroomProfile", message: "김병관 loaded" }),
+  Object.freeze({ level: "INFO", logger: "BrideProfile", message: "김도은 loaded" }),
+  Object.freeze({ level: "INFO", logger: "PromiseContext", message: "Two hearts connected" }),
+  Object.freeze({ level: "INFO", logger: "WeddingSchedule", message: "2026-11-21 13:50" }),
+  Object.freeze({ level: "INFO", logger: "VenueService", message: "보타닉 웨딩파크" }),
+  Object.freeze({ level: "SUCCESS", logger: WEDDING_RELEASE, message: "wedding-v1.0 deployed ♥" }),
+]);
+
+export function buildDeveloperSequence() {
+  return DEVELOPER_SEQUENCE.map((entry) => ({ ...entry }));
+}
+
 export function buildCalendarWeeks(year, monthIndex, weddingDate) {
   const firstWeekday = new Date(year, monthIndex, 1).getDay();
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
