@@ -3,6 +3,10 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 import {
+  AI_GUEST_MESSAGES,
+  DEVELOPER_TRANSITION_COMMANDS,
+  WEDDING_RELEASE,
+  buildDeveloperSequence,
   buildCalendarWeeks,
   buildExternalMapLinks,
   getDdayDisplay,
@@ -165,4 +169,90 @@ test("the app wires the approved invitation interactions", async () => {
   assert.match(app, /IntersectionObserver/);
   assert.match(app, /getBoundingClientRect\(\)/);
   assert.match(app, /addEventListener\("scroll"/);
+});
+
+test("buildDeveloperSequence returns the approved branch transition and wedding release", () => {
+  assert.deepEqual(DEVELOPER_TRANSITION_COMMANDS, [
+    "git fetch origin",
+    "git pull --ff-only",
+    "git switch develop",
+  ]);
+  assert.equal(WEDDING_RELEASE, "wedding-v1.0");
+
+  const sequence = buildDeveloperSequence();
+  const source = JSON.stringify(sequence);
+
+  assert.match(source, /wedding-v1\.0/);
+  assert.match(source, /김병관/);
+  assert.match(source, /김도은/);
+  assert.match(source, /2026-11-21 13:50/);
+  assert.match(source, /보타닉 웨딩파크/);
+  assert.doesNotMatch(source, /forever-v1\.0|새로운 인생 버전/);
+});
+
+test("AI guest messages contain exactly the five approved agents and complete card metadata", () => {
+  assert.deepEqual(AI_GUEST_MESSAGES.map((agent) => agent.name), [
+    "Codex",
+    "Claude",
+    "Cursor",
+    "Kimi · 키미",
+    "Gemini · 제미나이",
+  ]);
+  assert.equal(new Set(AI_GUEST_MESSAGES.map((agent) => agent.accent)).size, 5);
+
+  for (const agent of AI_GUEST_MESSAGES) {
+    assert.deepEqual(Object.keys(agent).sort(), [
+      "accent",
+      "approved",
+      "handle",
+      "icon",
+      "name",
+      "request",
+    ]);
+    assert.ok(agent.icon);
+    assert.match(agent.handle, /^@/);
+    assert.match(agent.approved, /^APPROVED/);
+  }
+
+  const source = JSON.stringify(AI_GUEST_MESSAGES);
+  const forbiddenApproval = ["LG", "TM"].join("");
+  assert.equal(source.includes(forbiddenApproval), false);
+  assert.doesNotMatch(source, /Grok|ChatGPT|WeddingBot/);
+  assert.equal(new Set(AI_GUEST_MESSAGES.map((agent) => agent.request)).size, 5);
+  assert.equal(new Set(AI_GUEST_MESSAGES.map((agent) => agent.approved)).size, 5);
+});
+
+test("the page exposes one shared invitation DOM with accessible developer controls", async () => {
+  const [html, app, css] = await Promise.all([
+    readFile(new URL("../index.html", import.meta.url), "utf8"),
+    readFile(new URL("../src/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../styles.css", import.meta.url), "utf8"),
+  ]);
+  const source = `${html}\n${app}\n${css}`;
+
+  assert.match(html, /<main class="invitation" data-mode="normal">/);
+  assert.match(html, /id="developer-toggle"[^>]+aria-pressed="false"/);
+  assert.match(html, /id="developer-transition"[^>]+hidden/);
+  assert.match(html, /id="developer-console-log"[^>]+role="log"[^>]+aria-live="polite"/);
+  assert.match(html, /id="ai-agent-selector"/);
+  assert.match(html, /id="visitor-message"[^>]+maxlength="50"/);
+  assert.match(html, /id="developer-congratulations"/);
+
+  for (const section of ["cover", "invitation", "schedule", "gallery", "location", "accounts", "thanks"]) {
+    assert.match(html, new RegExp(`data-developer-section="${section}"`));
+  }
+  assert.equal((html.match(/data-developer-section=/g) ?? []).length, 7);
+
+  assert.match(app, /function setupDeveloperMode\(/);
+  assert.match(app, /AI_GUEST_MESSAGES/);
+  assert.match(app, /DEVELOPER_TRANSITION_COMMANDS/);
+  assert.match(app, /window\.scrollTo\(/);
+  assert.match(app, /setInterval\([^,]+,\s*3_500\)/s);
+  assert.match(css, /\.invitation\[data-mode="developer"\]/);
+  assert.match(css, /\.developer-rsvp/);
+  assert.match(css, /prefers-reduced-motion:\s*reduce/);
+
+  const forbiddenApproval = ["LG", "TM"].join("");
+  assert.equal(source.includes(forbiddenApproval), false);
+  assert.doesNotMatch(source, /Grok|ChatGPT|WeddingBot|forever-v1\.0|새로운 인생 버전/);
 });
