@@ -334,10 +334,7 @@ function setupDeveloperMode() {
   const handle = document.getElementById("ai-agent-handle");
   const request = document.getElementById("ai-agent-request");
   const approved = document.getElementById("ai-agent-approved");
-  const form = document.getElementById("developer-congratulations-form");
-  const messageInput = document.getElementById("visitor-message");
   const submit = document.getElementById("developer-congratulations");
-  const rsvpLog = document.getElementById("developer-rsvp-log");
   const response = document.getElementById("developer-response");
   const particles = document.getElementById("developer-particle-layer");
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -511,10 +508,8 @@ function setupDeveloperMode() {
     transition.hidden = true;
     transitionLines.replaceChildren();
     consoleLog.replaceChildren();
-    rsvpLog.replaceChildren();
     response.hidden = true;
     approved.hidden = true;
-    messageInput.value = "";
     window.scrollTo({ top: 0, behavior: reducedMotion.matches ? "auto" : "smooth" });
   }
 
@@ -543,18 +538,11 @@ function setupDeveloperMode() {
     leaveDeveloperMode();
   });
 
-  form.addEventListener("submit", (event) => {
-    event.preventDefault();
+  submit.addEventListener("click", () => {
     if (state !== "developer.ready" && state !== "celebrated") return;
     const agent = AI_GUEST_MESSAGES[agentIndex];
-    const message = messageInput.value.trim() || "두 분의 새로운 시작을 축하합니다!";
-    const line = document.createElement("p");
-    const label = document.createElement("strong");
-    label.textContent = "VISITOR";
-    line.append(label, ` : ${message}`);
-    rsvpLog.appendChild(line);
     approved.hidden = false;
-    response.textContent = "200 OK — 축하의 마음이 전달되었습니다.";
+    response.textContent = "200 OK — 승인되었습니다. ♥";
     response.hidden = false;
     submit.disabled = true;
     state = "celebrated";

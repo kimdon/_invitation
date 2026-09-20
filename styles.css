@@ -1336,35 +1336,6 @@ body.is-developer-mode .petal-layer {
   margin-top: 22px;
 }
 
-.developer-congratulations label {
-  display: flex;
-  justify-content: space-between;
-  color: var(--terminal-text);
-  font-size: 12px;
-}
-
-.developer-congratulations label span {
-  color: var(--terminal-dim);
-}
-
-.developer-congratulations input {
-  width: 100%;
-  min-height: 48px;
-  margin-top: 8px;
-  padding: 10px 12px;
-  border: 1px solid #315b40;
-  border-radius: 4px;
-  outline: 0;
-  background: #020704;
-  color: #f0f6fc;
-  font: 16px/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-}
-
-.developer-congratulations input:focus {
-  border-color: var(--terminal-green);
-  box-shadow: 0 0 0 2px rgba(126, 231, 135, 0.14);
-}
-
 .developer-congratulations button {
   width: 100%;
   min-height: 48px;
@@ -1380,18 +1351,6 @@ body.is-developer-mode .petal-layer {
 .developer-congratulations button:disabled {
   cursor: wait;
   opacity: 0.55;
-}
-
-.developer-rsvp__log {
-  margin-top: 18px;
-  color: var(--terminal-text);
-  font-size: 12px;
-  line-height: 1.7;
-}
-
-.developer-rsvp__log strong {
-  color: var(--terminal-blue);
-  font-weight: 500;
 }
 
 .developer-response {

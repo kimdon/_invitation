@@ -252,8 +252,10 @@ test("the page exposes one shared invitation DOM with accessible developer contr
   assert.match(html, /id="developer-transition"[^>]+hidden/);
   assert.match(html, /id="developer-console-log"[^>]+role="log"[^>]+aria-live="polite"/);
   assert.match(html, /id="ai-agent-selector"/);
-  assert.match(html, /id="visitor-message"[^>]+maxlength="50"/);
-  assert.match(html, /id="developer-congratulations"/);
+  assert.doesNotMatch(html, /id="visitor-message"/);
+  assert.doesNotMatch(html, /id="developer-rsvp-log"/);
+  assert.doesNotMatch(html, /id="developer-congratulations-form"/);
+  assert.match(html, /id="developer-congratulations" type="button">APPROVE ♥<\/button>/);
 
   for (const section of ["cover", "invitation", "schedule", "gallery", "location", "accounts", "thanks"]) {
     assert.match(html, new RegExp(`data-developer-section="${section}"`));
@@ -265,6 +267,10 @@ test("the page exposes one shared invitation DOM with accessible developer contr
   assert.match(app, /DEVELOPER_TRANSITION_COMMANDS/);
   assert.match(app, /window\.scrollTo\(/);
   assert.match(app, /setInterval\([^,]+,\s*3_500\)/s);
+  assert.doesNotMatch(app, /messageInput|rsvpLog|VISITOR/);
+  assert.match(app, /submit\.addEventListener\("click"/);
+  assert.match(app, /200 OK — 승인되었습니다\. ♥/);
+  assert.match(app, /index < 42/);
   assert.match(css, /\.invitation\[data-mode="developer"\]/);
   assert.match(css, /\.developer-rsvp/);
   assert.match(css, /prefers-reduced-motion:\s*reduce/);
