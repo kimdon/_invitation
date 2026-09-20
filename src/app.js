@@ -485,6 +485,10 @@ function setupDeveloperMode() {
     }
 
     consoleLog.setAttribute("aria-busy", "false");
+    await wait(400);
+    if (id !== sequenceId || invitation.dataset.mode !== "developer") return;
+    invitation.dataset.bootState = "ready";
+    invitation.setAttribute("aria-busy", "false");
     state = "developer.ready";
     startAgentRotation();
   }
@@ -494,6 +498,8 @@ function setupDeveloperMode() {
     const id = sequenceId;
     state = "switching";
     invitation.dataset.mode = "switching";
+    invitation.dataset.bootState = "booting";
+    invitation.setAttribute("aria-busy", "true");
     document.body.classList.add("is-developer-mode", "is-switching-mode");
     toggle.setAttribute("aria-pressed", "true");
     toggle.disabled = true;
@@ -523,6 +529,8 @@ function setupDeveloperMode() {
     cancelAnimations();
     state = "normal";
     invitation.dataset.mode = "normal";
+    invitation.dataset.bootState = "idle";
+    invitation.setAttribute("aria-busy", "false");
     document.body.classList.remove("is-developer-mode", "is-switching-mode");
     toggle.setAttribute("aria-pressed", "false");
     toggle.disabled = false;

@@ -1050,6 +1050,30 @@ body.is-developer-mode .petal-layer {
   transform: none;
 }
 
+.invitation[data-mode="developer"][data-boot-state="booting"] > .section,
+.invitation[data-mode="developer"][data-boot-state="booting"] > .developer-rsvp,
+.invitation[data-mode="developer"][data-boot-state="booting"] > .footer {
+  display: none;
+}
+
+.invitation[data-mode="developer"][data-boot-state="ready"] > .section,
+.invitation[data-mode="developer"][data-boot-state="ready"] > .developer-rsvp,
+.invitation[data-mode="developer"][data-boot-state="ready"] > .footer {
+  animation: developer-content-ready 0.45s ease-out both;
+}
+
+@keyframes developer-content-ready {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .invitation[data-mode="developer"] .developer-command {
   display: block;
   margin: 12px 0 28px;

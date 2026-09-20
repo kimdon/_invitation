@@ -239,6 +239,29 @@ test("developer invitation terms use developer-mode-only highlight markup", asyn
   assert.doesNotMatch(css, /(^|\n)\.developer-term\s*\{/);
 });
 
+test("developer content stays gated until the boot sequence is ready", async () => {
+  const [html, app, css] = await Promise.all([
+    readFile(new URL("../index.html", import.meta.url), "utf8"),
+    readFile(new URL("../src/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../styles.css", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(
+    html,
+    /<main class="invitation" data-mode="normal" data-boot-state="idle">/,
+  );
+  assert.match(app, /invitation\.dataset\.bootState = "booting"/);
+  assert.match(app, /invitation\.setAttribute\("aria-busy", "true"\)/);
+  assert.match(app, /await wait\(400\)/);
+  assert.match(app, /invitation\.dataset\.bootState = "ready"/);
+  assert.match(app, /invitation\.dataset\.bootState = "idle"/);
+  assert.match(
+    css,
+    /\.invitation\[data-mode="developer"\]\[data-boot-state="booting"\]/,
+  );
+  assert.match(css, /@keyframes developer-content-ready/);
+});
+
 test("AI guest messages contain exactly the five approved agents and complete card metadata", () => {
   assert.deepEqual(AI_GUEST_MESSAGES.map((agent) => agent.name), [
     "Codex",
@@ -349,7 +372,7 @@ test("the page exposes one shared invitation DOM with accessible developer contr
   ]);
   const source = `${html}\n${app}\n${css}`;
 
-  assert.match(html, /<main class="invitation" data-mode="normal">/);
+  assert.match(html, /<main class="invitation" data-mode="normal" data-boot-state="idle">/);
   assert.match(html, /id="developer-toggle"[^>]+aria-pressed="false"/);
   assert.match(html, /id="developer-transition"[^>]+hidden/);
   assert.match(html, /id="developer-console-log"[^>]+role="log"[^>]+aria-live="polite"/);
