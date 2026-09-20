@@ -48,7 +48,7 @@
         <div class="cover__shade" aria-hidden="true"></div>
         <div class="cover__content">
           <h1 class="visually-hidden" id="couple-names">김병관 <span>·</span> 김도은</h1>
-          <p class="cover__name">Byeong-gwan</p>
+          <p class="cover__name">Kim Byung-kwan</p>
           <p class="cover__ampersand">&amp;</p>
           <p class="cover__name">Do-eun</p>
           <p class="cover__date">2026 . 11 . 21</p>
@@ -60,7 +60,7 @@
     / \        / \</pre>
           <p class="developer-cover__title">OUR WEDDING</p>
           <p class="developer-cover__version">wedding-v1.0</p>
-          <p class="developer-cover__names">Kim Byeong-gwan × Kim Do-eun</p>
+          <p class="developer-cover__names">Kim Byung-kwan × Kim Do-eun</p>
           <div class="developer-console-log" id="developer-console-log" role="log" aria-live="polite" aria-label="웨딩 배포 로그"></div>
         </div>
         <span class="cover__arrow" aria-hidden="true">↓</span>
@@ -70,7 +70,7 @@
         <p class="developer-command" aria-hidden="true">$ weddingctl show invitation --with-family</p>
         <h2 class="section-kicker" id="invitation-title">Invitation</h2>
         <div class="section-rule" aria-hidden="true"></div>
-        <p class="greeting">
+        <p class="greeting greeting--normal">
           서로가 마주보며 다져온 사랑을<br>
           이제 함께 한곳을 바라보며<br>
           걸어갈 수 있는 큰 사랑으로<br>
@@ -79,6 +79,16 @@
           지켜나갈 수 있도록<br>
           오셔서 축복해 주시면<br>
           더없는 기쁨으로 간직하겠습니다.
+        </p>
+        <p class="greeting greeting--developer">
+          서로 다른 branch에서 시작된 두 사람이<br>
+          수많은 commit으로 추억을 쌓아왔습니다.<br>
+          가끔 예상하지 못한 conflict도 있었지만<br>
+          대화와 믿음으로 하나씩 resolve해 왔습니다.<br><br>
+          이제 두 마음을 평생이라는 main branch에<br>
+          merge하려 합니다.<br>
+          저희의 새로운 release를 따뜻한 마음으로<br>
+          approve해 주세요.
         </p>
         <div class="family">
           <p>김창희 · 김경자 <span>의 아들</span> <strong>김병관</strong></p>
@@ -193,12 +203,9 @@
           <p class="agent-review__request" id="ai-agent-request"></p>
           <p class="agent-review__approved" id="ai-agent-approved" hidden></p>
         </article>
-        <form class="developer-congratulations" id="developer-congratulations-form">
-          <label for="visitor-message">축하 한마디 <span>최대 50자</span></label>
-          <input id="visitor-message" name="message" type="text" maxlength="50" placeholder="두 분의 새로운 시작을 축하합니다!">
-          <button id="developer-congratulations" type="submit">APPROVE &amp; SEND ♥</button>
-        </form>
-        <div class="developer-rsvp__log" id="developer-rsvp-log" role="log" aria-live="polite"></div>
+        <div class="developer-congratulations">
+          <button id="developer-congratulations" type="button">APPROVE ♥</button>
+        </div>
         <p class="developer-response" id="developer-response" role="status" aria-live="polite" hidden></p>
       </section>
 
@@ -209,7 +216,7 @@
       </footer>
 
       <div class="petal-layer" id="petal-layer" aria-hidden="true"></div>
-      <div class="developer-particle-layer" id="developer-particle-layer" aria-hidden="true"></div>
+      <canvas class="developer-particle-layer" id="developer-particle-layer" aria-hidden="true"></canvas>
     </main>
 
     <dialog class="account-dialog" id="account-dialog" aria-labelledby="account-dialog-title">

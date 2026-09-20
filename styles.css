@@ -212,6 +212,10 @@ a {
   text-wrap: pretty;
 }
 
+.greeting--developer {
+  display: none;
+}
+
 .family {
   margin-top: 44px;
   padding: 26px 20px;
@@ -276,6 +280,7 @@ a {
   border-collapse: collapse;
   color: #cfc4b2;
   font-size: 14px;
+  table-layout: fixed;
   text-align: center;
 }
 
@@ -703,6 +708,7 @@ a {
   align-items: center;
   justify-content: center;
   padding: 0 12px 12px;
+  touch-action: none;
 }
 
 .photo-viewer__content img {
@@ -1002,6 +1008,14 @@ body.is-developer-mode .petal-layer {
   color: var(--terminal-green);
 }
 
+.developer-log-line--debug strong {
+  color: var(--terminal-blue);
+}
+
+.developer-log-line--warn strong {
+  color: #f2cc60;
+}
+
 .invitation[data-mode="developer"] .cover__arrow {
   color: var(--terminal-green);
 }
@@ -1065,6 +1079,14 @@ body.is-developer-mode .petal-layer {
   font-size: 14px;
   line-height: 2.1;
   text-align: left;
+}
+
+.invitation[data-mode="developer"] .greeting--normal {
+  display: none;
+}
+
+.invitation[data-mode="developer"] .greeting--developer {
+  display: block;
 }
 
 .invitation[data-mode="developer"] .family {
@@ -1244,6 +1266,10 @@ body.is-developer-mode .petal-layer {
 }
 
 .agent-selector button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   min-width: 0;
   min-height: 44px;
   border: 1px solid #315b40;
@@ -1253,6 +1279,42 @@ body.is-developer-mode .petal-layer {
   cursor: pointer;
   font-family: inherit;
   font-size: 12px;
+}
+
+.agent-selector__visual,
+.agent-review__visual {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.agent-selector__visual {
+  width: 24px;
+  height: 24px;
+}
+
+.agent-review__visual {
+  width: 30px;
+  height: 30px;
+}
+
+.agent-icon__image,
+.agent-icon__fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.agent-icon__image {
+  z-index: 1;
+  background: var(--terminal-panel);
+  object-fit: contain;
+}
+
+.agent-icon__fallback {
+  display: grid;
+  place-items: center;
 }
 
 .agent-selector button.is-active {
@@ -1316,35 +1378,6 @@ body.is-developer-mode .petal-layer {
   margin-top: 22px;
 }
 
-.developer-congratulations label {
-  display: flex;
-  justify-content: space-between;
-  color: var(--terminal-text);
-  font-size: 12px;
-}
-
-.developer-congratulations label span {
-  color: var(--terminal-dim);
-}
-
-.developer-congratulations input {
-  width: 100%;
-  min-height: 48px;
-  margin-top: 8px;
-  padding: 10px 12px;
-  border: 1px solid #315b40;
-  border-radius: 4px;
-  outline: 0;
-  background: #020704;
-  color: #f0f6fc;
-  font: 16px/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-}
-
-.developer-congratulations input:focus {
-  border-color: var(--terminal-green);
-  box-shadow: 0 0 0 2px rgba(126, 231, 135, 0.14);
-}
-
 .developer-congratulations button {
   width: 100%;
   min-height: 48px;
@@ -1360,18 +1393,6 @@ body.is-developer-mode .petal-layer {
 .developer-congratulations button:disabled {
   cursor: wait;
   opacity: 0.55;
-}
-
-.developer-rsvp__log {
-  margin-top: 18px;
-  color: var(--terminal-text);
-  font-size: 12px;
-  line-height: 1.7;
-}
-
-.developer-rsvp__log strong {
-  color: var(--terminal-blue);
-  font-weight: 500;
 }
 
 .developer-response {
@@ -1406,21 +1427,12 @@ body.is-developer-mode .petal-layer {
   position: fixed;
   z-index: 100;
   top: 0;
-  bottom: 0;
   left: 50%;
   display: block;
   width: min(100%, 430px);
-  overflow: hidden;
+  height: 100%;
   pointer-events: none;
   transform: translateX(-50%);
-}
-
-.developer-particle-layer span {
-  position: absolute;
-  color: var(--particle-accent);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 13px;
-  animation: developer-particle 1.1s ease-out forwards;
 }
 
 .is-developer-mode .account-dialog {
@@ -1458,17 +1470,6 @@ body.is-developer-mode .petal-layer {
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes developer-particle {
-  0% {
-    opacity: 1;
-    transform: translate(0, 0) rotate(0deg);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(var(--particle-x), 260px) rotate(300deg);
   }
 }
 

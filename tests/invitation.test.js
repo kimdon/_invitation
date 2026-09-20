@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 
 import {
@@ -11,6 +12,14 @@ import {
   buildExternalMapLinks,
   getDdayDisplay,
 } from "../src/invitation.js";
+
+const EXPECTED_AI_ICON_PATHS = [
+  "./images/ai-icons/codex.png",
+  "./images/ai-icons/claude.png",
+  "./images/ai-icons/cursor.svg",
+  "./images/ai-icons/kimi.svg",
+  "./images/ai-icons/gemini.png",
+];
 
 test("buildCalendarWeeks returns every day in November 2026", () => {
   const weeks = buildCalendarWeeks(2026, 10, 21);
@@ -128,7 +137,7 @@ test("the page uses the editorial invitation structure", async () => {
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
 
   assert.match(html, /class="cover cover--editorial"/);
-  assert.match(html, /Byeong-gwan/);
+  assert.match(html, /Kim Byung-kwan/);
   assert.match(html, /Do-eun/);
   assert.match(html, /class="section section--dark schedule-calendar/);
   assert.match(html, /id="account-dialog"/);
@@ -151,8 +160,10 @@ test("the stylesheet defines the approved editorial theme", async () => {
   assert.doesNotMatch(css, /Noto Serif KR|Cormorant Garamond/);
   assert.doesNotMatch(html, /fonts\.googleapis\.com|fonts\.gstatic\.com/);
   assert.match(css, /\.schedule-calendar\s*\{/);
+  assert.match(css, /\.calendar\s*\{[^}]*table-layout:\s*fixed/s);
   assert.match(css, /\.account-dialog\s*\{/);
   assert.match(css, /\.photo-viewer\s*\{/);
+  assert.match(css, /\.photo-viewer__content\s*\{[^}]*touch-action:\s*none/s);
   assert.match(css, /@media\s*\(prefers-reduced-motion:\s*reduce\)/);
 });
 
@@ -169,6 +180,10 @@ test("the app wires the approved invitation interactions", async () => {
   assert.match(app, /IntersectionObserver/);
   assert.match(app, /getBoundingClientRect\(\)/);
   assert.match(app, /addEventListener\("scroll"/);
+  assert.match(
+    app,
+    /appendTransition\("Switched to branch 'develop' ✓", true\);\s*await wait\(1000\);/s,
+  );
 });
 
 test("buildDeveloperSequence returns the approved branch transition and wedding release", () => {
@@ -181,13 +196,32 @@ test("buildDeveloperSequence returns the approved branch transition and wedding 
 
   const sequence = buildDeveloperSequence();
   const source = JSON.stringify(sequence);
+  const levels = sequence.map((entry) => entry.level);
 
   assert.match(source, /wedding-v1\.0/);
   assert.match(source, /김병관/);
   assert.match(source, /김도은/);
   assert.match(source, /2026-11-21 13:50/);
   assert.match(source, /보타닉 웨딩파크/);
+  assert.ok(levels.includes("DEBUG"));
+  assert.ok(levels.includes("WARN"));
+  assert.match(source, /DateTest/);
+  assert.match(source, /수많은 대화와 데이트 테스트를 통과했습니다/);
+  assert.match(source, /RuntimePolicy/);
+  assert.match(source, /이제 단독 실행은 권장하지 않습니다/);
   assert.doesNotMatch(source, /forever-v1\.0|새로운 인생 버전/);
+});
+
+test("developer copy uses merge language while both modes share the requested English name", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+
+  assert.equal((html.match(/Kim Byung-kwan/g) ?? []).length, 2);
+  assert.doesNotMatch(html, /Byeong-gwan/);
+  assert.match(html, /class="greeting greeting--normal"/);
+  assert.match(html, /class="greeting greeting--developer"/);
+  for (const term of ["branch", "commit", "conflict", "merge", "approve"]) {
+    assert.match(html, new RegExp(term));
+  }
 });
 
 test("AI guest messages contain exactly the five approved agents and complete card metadata", () => {
@@ -199,6 +233,7 @@ test("AI guest messages contain exactly the five approved agents and complete ca
     "Gemini · 제미나이",
   ]);
   assert.equal(new Set(AI_GUEST_MESSAGES.map((agent) => agent.accent)).size, 5);
+  assert.deepEqual(AI_GUEST_MESSAGES.map((agent) => agent.iconSrc), EXPECTED_AI_ICON_PATHS);
 
   for (const agent of AI_GUEST_MESSAGES) {
     assert.deepEqual(Object.keys(agent).sort(), [
@@ -206,12 +241,15 @@ test("AI guest messages contain exactly the five approved agents and complete ca
       "approved",
       "handle",
       "icon",
+      "iconSrc",
       "name",
       "request",
     ]);
-    assert.ok(agent.icon);
+    assert.ok(agent.icon, "text fallback is required");
+    assert.match(agent.iconSrc, /^\.\/images\/ai-icons\//);
     assert.match(agent.handle, /^@/);
     assert.match(agent.approved, /^APPROVED/);
+    assert.match(agent.request, /wedding-v1\.0|REVIEW|DIFF|코드|로직/);
   }
 
   const source = JSON.stringify(AI_GUEST_MESSAGES);
@@ -220,6 +258,52 @@ test("AI guest messages contain exactly the five approved agents and complete ca
   assert.doesNotMatch(source, /Grok|ChatGPT|WeddingBot/);
   assert.equal(new Set(AI_GUEST_MESSAGES.map((agent) => agent.request)).size, 5);
   assert.equal(new Set(AI_GUEST_MESSAGES.map((agent) => agent.approved)).size, 5);
+});
+
+test("local AI icons connect selectors and the active card with accessible fallbacks", async () => {
+  const [app, css] = await Promise.all([
+    readFile(new URL("../src/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../styles.css", import.meta.url), "utf8"),
+  ]);
+
+  for (const iconPath of EXPECTED_AI_ICON_PATHS) {
+    const assetUrl = new URL(`../${iconPath.replace("./", "")}`, import.meta.url);
+    assert.equal(existsSync(assetUrl), true, `${iconPath} should exist locally`);
+  }
+
+  assert.match(app, /function createAgentIconVisual\(/);
+  assert.match(app, /image\.src = agent\.iconSrc/);
+  assert.match(app, /image\.alt = ""/);
+  assert.match(app, /image\.addEventListener\("error"/);
+  assert.doesNotMatch(app, /agent-selector__name/);
+  assert.doesNotMatch(css, /\.agent-selector__name/);
+  assert.match(app, /setAttribute\("aria-label", `\$\{agent\.name\} 승인 메시지 보기`\)/);
+  assert.match(css, /object-fit:\s*contain/);
+});
+
+test("approval uses one reusable canvas firework with reduced-motion protection", async () => {
+  const [html, app, css] = await Promise.all([
+    readFile(new URL("../index.html", import.meta.url), "utf8"),
+    readFile(new URL("../src/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../styles.css", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(html, /<canvas class="developer-particle-layer" id="developer-particle-layer"/);
+  assert.match(app, /getContext\("2d"\)/);
+  assert.match(app, /requestAnimationFrame/);
+  assert.match(app, /cancelAnimationFrame/);
+  assert.match(app, /Math\.cos\(angle\)/);
+  assert.match(app, /Math\.sin\(angle\)/);
+  assert.match(app, /reducedMotion\.matches/);
+  assert.match(app, /globalCompositeOperation = "destination-out"/);
+  assert.doesNotMatch(app, /particle\.textContent|symbols = \[/);
+  assert.doesNotMatch(css, /@keyframes developer-particle/);
+});
+
+test("calendar uses a fixed seven-column layout so the wedding marker cannot widen Saturday", async () => {
+  const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
+
+  assert.match(css, /\.calendar\s*\{[^}]*table-layout:\s*fixed/s);
 });
 
 test("the page exposes one shared invitation DOM with accessible developer controls", async () => {
@@ -235,8 +319,10 @@ test("the page exposes one shared invitation DOM with accessible developer contr
   assert.match(html, /id="developer-transition"[^>]+hidden/);
   assert.match(html, /id="developer-console-log"[^>]+role="log"[^>]+aria-live="polite"/);
   assert.match(html, /id="ai-agent-selector"/);
-  assert.match(html, /id="visitor-message"[^>]+maxlength="50"/);
-  assert.match(html, /id="developer-congratulations"/);
+  assert.doesNotMatch(html, /id="visitor-message"/);
+  assert.doesNotMatch(html, /id="developer-rsvp-log"/);
+  assert.doesNotMatch(html, /id="developer-congratulations-form"/);
+  assert.match(html, /id="developer-congratulations" type="button">APPROVE ♥<\/button>/);
 
   for (const section of ["cover", "invitation", "schedule", "gallery", "location", "accounts", "thanks"]) {
     assert.match(html, new RegExp(`data-developer-section="${section}"`));
@@ -248,6 +334,10 @@ test("the page exposes one shared invitation DOM with accessible developer contr
   assert.match(app, /DEVELOPER_TRANSITION_COMMANDS/);
   assert.match(app, /window\.scrollTo\(/);
   assert.match(app, /setInterval\([^,]+,\s*3_500\)/s);
+  assert.doesNotMatch(app, /messageInput|rsvpLog|VISITOR/);
+  assert.match(app, /submit\.addEventListener\("click"/);
+  assert.match(app, /200 OK — 승인되었습니다\. ♥/);
+  assert.match(app, /length: 96/);
   assert.match(css, /\.invitation\[data-mode="developer"\]/);
   assert.match(css, /\.developer-rsvp/);
   assert.match(css, /prefers-reduced-motion:\s*reduce/);

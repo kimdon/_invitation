@@ -334,17 +334,16 @@ function setupDeveloperMode() {
   const handle = document.getElementById("ai-agent-handle");
   const request = document.getElementById("ai-agent-request");
   const approved = document.getElementById("ai-agent-approved");
-  const form = document.getElementById("developer-congratulations-form");
-  const messageInput = document.getElementById("visitor-message");
   const submit = document.getElementById("developer-congratulations");
-  const rsvpLog = document.getElementById("developer-rsvp-log");
   const response = document.getElementById("developer-response");
-  const particles = document.getElementById("developer-particle-layer");
+  const fireworks = document.getElementById("developer-particle-layer");
+  const fireworkContext = fireworks.getContext("2d");
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   const timers = new Set();
   let sequenceId = 0;
   let agentIndex = 0;
   let agentInterval = null;
+  let fireworkFrame = null;
   let state = "normal";
 
   function schedule(callback, delay) {
@@ -371,7 +370,7 @@ function setupDeveloperMode() {
     timers.forEach((timer) => window.clearTimeout(timer));
     timers.clear();
     stopAgentRotation();
-    particles.replaceChildren();
+    cancelFireworks();
   }
 
   function createLogLine(entry, time) {
@@ -395,11 +394,28 @@ function setupDeveloperMode() {
     window.scrollTo({ top: bottom - window.innerHeight, behavior: "smooth" });
   }
 
+  function createAgentIconVisual(agent, className) {
+    const frame = document.createElement("span");
+    const fallback = document.createElement("span");
+    const image = document.createElement("img");
+    frame.className = className;
+    frame.setAttribute("aria-hidden", "true");
+    fallback.className = "agent-icon__fallback";
+    fallback.textContent = agent.icon;
+    fallback.setAttribute("aria-hidden", "true");
+    image.className = "agent-icon__image";
+    image.alt = "";
+    image.src = agent.iconSrc;
+    image.addEventListener("error", () => image.remove(), { once: true });
+    frame.append(fallback, image);
+    return frame;
+  }
+
   function renderAgent(requestedIndex) {
     agentIndex = (requestedIndex + AI_GUEST_MESSAGES.length) % AI_GUEST_MESSAGES.length;
     const agent = AI_GUEST_MESSAGES[agentIndex];
     card.style.setProperty("--agent-accent", agent.accent);
-    icon.textContent = agent.icon;
+    icon.replaceChildren(createAgentIconVisual(agent, "agent-review__visual"));
     name.textContent = agent.name;
     handle.textContent = agent.handle;
     request.textContent = agent.request;
@@ -427,10 +443,10 @@ function setupDeveloperMode() {
   AI_GUEST_MESSAGES.forEach((agent, index) => {
     const button = document.createElement("button");
     button.type = "button";
-    button.textContent = agent.icon;
     button.setAttribute("aria-label", `${agent.name} 승인 메시지 보기`);
     button.setAttribute("aria-pressed", "false");
     button.style.setProperty("--agent-accent", agent.accent);
+    button.append(createAgentIconVisual(agent, "agent-selector__visual"));
     button.addEventListener("click", () => resetAgentRotation(index));
     selector.appendChild(button);
   });
@@ -448,7 +464,9 @@ function setupDeveloperMode() {
       "13:49:58.000",
       "13:49:58.214",
       "13:49:58.351",
+      "13:49:58.482",
       "13:49:58.629",
+      "13:49:58.810",
       "13:49:59.050",
       "13:49:59.421",
       "13:50:00.000",
@@ -487,7 +505,7 @@ function setupDeveloperMode() {
       if (id !== sequenceId) return;
     }
     appendTransition("Switched to branch 'develop' ✓", true);
-    await wait(300);
+    await wait(1000);
     if (id !== sequenceId) return;
 
     transitionLines.replaceChildren();
@@ -509,28 +527,98 @@ function setupDeveloperMode() {
     transition.hidden = true;
     transitionLines.replaceChildren();
     consoleLog.replaceChildren();
-    rsvpLog.replaceChildren();
     response.hidden = true;
     approved.hidden = true;
-    messageInput.value = "";
     window.scrollTo({ top: 0, behavior: reducedMotion.matches ? "auto" : "smooth" });
   }
 
-  function launchParticles(agent) {
-    particles.replaceChildren();
-    if (reducedMotion.matches) return;
-    const symbols = ["♥", "{ }", "< />", agent.icon, "*", "+"];
-    for (let index = 0; index < 42; index += 1) {
-      const particle = document.createElement("span");
-      particle.textContent = symbols[index % symbols.length];
-      particle.style.left = `${12 + Math.random() * 76}%`;
-      particle.style.top = `${48 + Math.random() * 12}%`;
-      particle.style.setProperty("--particle-accent", agent.accent);
-      particle.style.setProperty("--particle-x", `${-80 + Math.random() * 160}px`);
-      particle.style.animationDelay = `${Math.random() * 120}ms`;
-      particles.appendChild(particle);
+  function clearFireworksCanvas() {
+    if (!fireworkContext) return;
+    fireworkContext.save();
+    fireworkContext.setTransform(1, 0, 0, 1, 0, 0);
+    fireworkContext.clearRect(0, 0, fireworks.width, fireworks.height);
+    fireworkContext.restore();
+  }
+
+  function cancelFireworks() {
+    if (fireworkFrame !== null) {
+      window.cancelAnimationFrame(fireworkFrame);
+      fireworkFrame = null;
     }
-    schedule(() => particles.replaceChildren(), 1_300);
+    clearFireworksCanvas();
+  }
+
+  function launchFireworks(agent) {
+    cancelFireworks();
+    if (reducedMotion.matches || !fireworkContext) return;
+
+    const bounds = fireworks.getBoundingClientRect();
+    const buttonBounds = submit.getBoundingClientRect();
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+    fireworks.width = Math.round(bounds.width * pixelRatio);
+    fireworks.height = Math.round(bounds.height * pixelRatio);
+    fireworkContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+
+    const originX = buttonBounds.left + buttonBounds.width / 2 - bounds.left;
+    const originY = buttonBounds.top + buttonBounds.height / 2 - bounds.top;
+    const colors = [agent.accent, "#7ee787", "#79c0ff", "#f2cc60", "#ff7b9c", "#f0f6fc"];
+    const burst = Array.from({ length: 96 }, (_, index) => {
+      const angle = (Math.PI * 2 * index) / 96 + (Math.random() - 0.5) * 0.09;
+      const speed = 2.8 + Math.random() * 4.2;
+      return {
+        x: originX,
+        y: originY,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        alpha: 1,
+        decay: 0.014 + Math.random() * 0.009,
+        size: 1.2 + Math.random() * 1.5,
+        color: colors[index % colors.length],
+      };
+    });
+
+    function drawFrame() {
+      fireworkContext.save();
+      fireworkContext.globalCompositeOperation = "destination-out";
+      fireworkContext.fillStyle = "rgba(0, 0, 0, 0.16)";
+      fireworkContext.fillRect(0, 0, bounds.width, bounds.height);
+      fireworkContext.restore();
+
+      let active = false;
+      fireworkContext.save();
+      fireworkContext.globalCompositeOperation = "source-over";
+      fireworkContext.lineCap = "round";
+
+      burst.forEach((particle) => {
+        if (particle.alpha <= 0) return;
+        active = true;
+        const previousX = particle.x;
+        const previousY = particle.y;
+        particle.vx *= 0.985;
+        particle.vy = particle.vy * 0.985 + 0.055;
+        particle.x += particle.vx;
+        particle.y += particle.vy;
+        particle.alpha -= particle.decay;
+
+        fireworkContext.globalAlpha = Math.max(0, particle.alpha);
+        fireworkContext.strokeStyle = particle.color;
+        fireworkContext.lineWidth = particle.size;
+        fireworkContext.beginPath();
+        fireworkContext.moveTo(previousX, previousY);
+        fireworkContext.lineTo(particle.x, particle.y);
+        fireworkContext.stroke();
+      });
+
+      fireworkContext.restore();
+      if (active) {
+        fireworkFrame = window.requestAnimationFrame(drawFrame);
+        return;
+      }
+      clearFireworksCanvas();
+      fireworkFrame = null;
+    }
+
+    fireworkFrame = window.requestAnimationFrame(drawFrame);
   }
 
   toggle.addEventListener("click", () => {
@@ -541,22 +629,15 @@ function setupDeveloperMode() {
     leaveDeveloperMode();
   });
 
-  form.addEventListener("submit", (event) => {
-    event.preventDefault();
+  submit.addEventListener("click", () => {
     if (state !== "developer.ready" && state !== "celebrated") return;
     const agent = AI_GUEST_MESSAGES[agentIndex];
-    const message = messageInput.value.trim() || "두 분의 새로운 시작을 축하합니다!";
-    const line = document.createElement("p");
-    const label = document.createElement("strong");
-    label.textContent = "VISITOR";
-    line.append(label, ` : ${message}`);
-    rsvpLog.appendChild(line);
     approved.hidden = false;
-    response.textContent = "200 OK — 축하의 마음이 전달되었습니다.";
+    response.textContent = "200 OK — 승인되었습니다. ♥";
     response.hidden = false;
     submit.disabled = true;
     state = "celebrated";
-    launchParticles(agent);
+    launchFireworks(agent);
     schedule(() => {
       submit.disabled = false;
       state = "developer.ready";
