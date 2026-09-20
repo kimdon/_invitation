@@ -505,7 +505,7 @@ function setupDeveloperMode() {
       if (id !== sequenceId) return;
     }
     appendTransition("Switched to branch 'develop' ✓", true);
-    await wait(300);
+    await wait(1000);
     if (id !== sequenceId) return;
 
     transitionLines.replaceChildren();

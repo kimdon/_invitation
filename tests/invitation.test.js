@@ -160,8 +160,10 @@ test("the stylesheet defines the approved editorial theme", async () => {
   assert.doesNotMatch(css, /Noto Serif KR|Cormorant Garamond/);
   assert.doesNotMatch(html, /fonts\.googleapis\.com|fonts\.gstatic\.com/);
   assert.match(css, /\.schedule-calendar\s*\{/);
+  assert.match(css, /\.calendar\s*\{[^}]*table-layout:\s*fixed/s);
   assert.match(css, /\.account-dialog\s*\{/);
   assert.match(css, /\.photo-viewer\s*\{/);
+  assert.match(css, /\.photo-viewer__content\s*\{[^}]*touch-action:\s*none/s);
   assert.match(css, /@media\s*\(prefers-reduced-motion:\s*reduce\)/);
 });
 
@@ -178,6 +180,10 @@ test("the app wires the approved invitation interactions", async () => {
   assert.match(app, /IntersectionObserver/);
   assert.match(app, /getBoundingClientRect\(\)/);
   assert.match(app, /addEventListener\("scroll"/);
+  assert.match(
+    app,
+    /appendTransition\("Switched to branch 'develop' ✓", true\);\s*await wait\(1000\);/s,
+  );
 });
 
 test("buildDeveloperSequence returns the approved branch transition and wedding release", () => {
