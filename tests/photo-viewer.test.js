@@ -8,6 +8,7 @@ import { getGallerySources } from "../src/invitation.js";
 const source = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
 const setup = source.slice(source.indexOf("function setupPhotoViewer("), source.indexOf("function createGalleryItem("));
 const legacyLoader = source.slice(source.indexOf("function loadOptionalImage("), source.indexOf("function renderCoverPhoto("));
+const zoomSetup = source.slice(source.indexOf("function setupZoomPrevention("), source.indexOf("function createPlaceholder("));
 
 function deferred() {
   let resolve, reject;
@@ -16,7 +17,7 @@ function deferred() {
   return { promise, resolve, reject };
 }
 
-function fixture({ reducedMotion = false } = {}) {
+function fixture({ reducedMotion = false, saveData = true, effectiveType = "4g" } = {}) {
   const images = [];
   const animations = [];
   class Element {
@@ -41,6 +42,10 @@ function fixture({ reducedMotion = false } = {}) {
     replaceChildren(...children) { this.children.forEach((child) => { child.parentElement = null; }); this.children = []; this.text = ""; this.append(...children); }
     remove() { if (this.parentElement) this.parentElement.children = this.parentElement.children.filter((child) => child !== this); this.parentElement = null; }
     contains(node) { return node === this || this.children.some((child) => child.contains(node)); }
+    closest(selector) {
+      for (let node = this; node; node = node.parentElement) if (selector.split(", ").includes(node.tagName)) return node;
+      return null;
+    }
     setAttribute(name, value) { this.attributes[name] = String(value); }
     addEventListener(type, callback, options = {}) { (this.listeners[type] ??= []).push({ callback, capture: !!options.capture }); }
     dispatch(type, details = {}) {
@@ -64,7 +69,7 @@ function fixture({ reducedMotion = false } = {}) {
     }
   }
   const ids = Object.fromEntries(["photo-viewer", "photo-viewer-content", "photo-viewer-label", "photo-viewer-close", "photo-viewer-prev", "photo-viewer-next", "photo-viewer-status"]
-    .map((id) => [id, new Element()]));
+    .map((id) => [id, new Element(/-(close|prev|next)$/.test(id) ? "button" : "div")]));
   const dialog = ids["photo-viewer"];
   dialog.append(...Object.entries(ids).filter(([id]) => id !== "photo-viewer").map(([, element]) => element));
   const body = new Element();
@@ -73,8 +78,10 @@ function fixture({ reducedMotion = false } = {}) {
   document.createElement = (tag) => new Element(tag);
   document.getElementById = (id) => ids[id];
   body.append(dialog);
-  const show = runInNewContext(`${legacyLoader}\n${setup}\nsetupPhotoViewer();`, {
+  document.append(body);
+  const show = runInNewContext(`${legacyLoader}\n${zoomSetup}\n${setup}\n${zoomSetup ? "setupZoomPrevention();" : ""}\nsetupPhotoViewer();`, {
     document, window: { matchMedia: () => ({ matches: reducedMotion }) }, getGallerySources, GALLERY_SIZE: 17,
+    navigator: { connection: { saveData, effectiveType } },
   });
   const resolveImage = async (index) => { images[index].naturalWidth = 1200; images[index].dispatch("load"); images[index].ready.resolve(); await setImmediate(); };
   return { ids, images, animations, show, resolveImage, document };
@@ -84,9 +91,11 @@ test("viewer keeps the visible photo while decoding and slides separate panes wi
   const { ids, images, animations, show, resolveImage } = fixture();
   show(1);
   assert.doesNotMatch(ids["photo-viewer-content"].textContent, /사진이 없습니다/);
+  assert.equal(ids["photo-viewer-status"].textContent, "", "initial loading is silent too");
   await resolveImage(0);
   const first = ids["photo-viewer-content"].children[0];
   ids["photo-viewer-next"].click();
+  assert.equal(ids["photo-viewer-status"].textContent, "", "loading copy must never appear during navigation");
   assert.equal(ids["photo-viewer-content"].children[0], first);
   assert.equal(ids["photo-viewer-label"].textContent, "1 / 17");
   assert.equal(ids["photo-viewer-content"].attributes["aria-busy"], "true");
@@ -94,6 +103,7 @@ test("viewer keeps the visible photo while decoding and slides separate panes wi
   assert.equal(images.length, 2, "rapid navigation must not start overlapping requests");
   await resolveImage(1);
   assert.equal(animations.length, 1);
+  assert.equal(animations[0].options.duration, 160);
   assert.equal(animations[0].target.children.length, 2);
   assert.equal(animations[0].keyframes[1].transform, "translateX(-100%)");
   assert.ok(animations[0].keyframes.every((frame) => !("opacity" in frame)));
@@ -103,12 +113,58 @@ test("viewer keeps the visible photo while decoding and slides separate panes wi
   assert.equal(ids["photo-viewer-content"].children.length, 1);
   assert.equal(ids["photo-viewer-content"].attributes["aria-busy"], "false");
   ids["photo-viewer-prev"].click();
-  await resolveImage(2);
+  await setImmediate();
+  assert.equal(images.length, 2, "the previous decoded photo is reused");
   assert.equal(animations[1].keyframes[0].transform, "translateX(-100%)");
   assert.equal(animations[1].keyframes[1].transform, "translateX(0)");
   animations[1].resolve();
   await setImmediate();
   assert.equal(ids["photo-viewer-label"].textContent, "1 / 17");
+});
+
+test("viewer warms only adjacent photos and reuses them on navigation", async () => {
+  const { ids, images, show, resolveImage } = fixture({ saveData: false, reducedMotion: true });
+  assert.equal(images.length, 0, "no full photos load before the viewer opens");
+  show(1);
+  assert.equal(images.length, 1);
+  await resolveImage(0);
+  assert.deepEqual(images.map(image => image.alt), ["사진 1", "사진 2", "사진 17"]);
+  await resolveImage(1);
+  await resolveImage(2);
+  ids["photo-viewer-next"].click();
+  await setImmediate();
+  assert.equal(ids["photo-viewer-label"].textContent, "2 / 17");
+  assert.equal(ids["photo-viewer-content"].children[0].children[0], images[1]);
+  assert.equal(images.length, 4, "only the next new neighbor is prefetched");
+  assert.equal(images[3].alt, "사진 3");
+  ids["photo-viewer-prev"].click();
+  await setImmediate();
+  assert.equal(ids["photo-viewer-label"].textContent, "1 / 17");
+  assert.equal(images.length, 5, "the distant cached photo was evicted instead of retaining all photos");
+  assert.equal(images[4].alt, "사진 17");
+});
+
+test("prefetch failures remain silent and can be retried by navigation", async () => {
+  const { ids, images, show, resolveImage } = fixture({ saveData: false, reducedMotion: true });
+  show(1);
+  await resolveImage(0);
+  assert.equal(images.length, 3, "adjacent prefetch requests should exist");
+  images[1].ready.reject(new Error("prefetch failed"));
+  await setImmediate();
+  assert.equal(ids["photo-viewer-status"].textContent, "");
+  ids["photo-viewer-next"].click();
+  assert.equal(images[3].alt, "사진 2");
+  await resolveImage(3);
+  assert.equal(ids["photo-viewer-label"].textContent, "2 / 17");
+});
+
+test("data-saving or slow connections do not preload full photos", async () => {
+  for (const options of [{ saveData: true }, { saveData: false, effectiveType: "2g" }]) {
+    const { images, show, resolveImage } = fixture(options);
+    show(1);
+    await resolveImage(0);
+    assert.equal(images.length, 1);
+  }
 });
 
 test("failed loads retain the current photo and show an error only after failure", async () => {
@@ -179,7 +235,7 @@ test("a multi-touch gesture stays ignored until every finger lifts, including ou
   assert.equal(images.length, 2, "a new single-finger swipe still works");
 });
 
-test("viewer header, buttons and surrounding area prevent double-tap and pinch defaults", async () => {
+test("viewer blocks zoom defaults without swallowing rapid control taps", async () => {
   const { ids, show, resolveImage } = fixture();
   show(1);
   await resolveImage(0);
@@ -188,7 +244,7 @@ test("viewer header, buttons and surrounding area prevent double-tap and pinch d
     touch(target, "touchstart", [finger(1, 20)], [finger(1, 20)], 3000);
     touch(target, "touchend", [], [finger(1, 20)], 3050);
     touch(target, "touchstart", [finger(1, 20)], [finger(1, 20)], 3100);
-    assert.equal(touch(target, "touchend", [], [finger(1, 20)], 3150).defaultPrevented, true, key);
+    assert.equal(touch(target, "touchend", [], [finger(1, 20)], 3150).defaultPrevented, target.tagName !== "button", key);
     assert.equal(target.dispatch("dblclick").defaultPrevented, true, key);
     assert.equal(target.dispatch("gesturestart").defaultPrevented, true, key);
     assert.equal(target.dispatch("gesturechange").defaultPrevented, true, key);

@@ -99,7 +99,7 @@ test("gallery keeps the current photos until new thumbnails decode, then crossfa
   assert.equal(viewport.children.length, 2, "outgoing photos cover the ready incoming page");
   assert.equal(viewport.children[1].attributes["aria-hidden"], "true");
   assert.equal(viewport.children[1].inert, true);
-  assert.equal(animations[0].options.duration, 260);
+  assert.equal(animations[0].options.duration, 180);
   animations[0].resolve();
   await setImmediate();
   assert.equal(viewport.children.length, 1);

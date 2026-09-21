@@ -19,6 +19,7 @@
 html {
   background: var(--canvas);
   scroll-behavior: smooth;
+  touch-action: pan-y;
 }
 
 body {
@@ -636,7 +637,7 @@ a {
 }
 
 .account-dialog[open] {
-  animation: dialog-up 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: dialog-up 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .account-dialog::backdrop,
@@ -862,7 +863,7 @@ a {
 
 .fade-section {
   opacity: 0;
-  transition: opacity 0.8s ease, transform 0.8s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease;
   transform: translateY(18px);
 }
 
