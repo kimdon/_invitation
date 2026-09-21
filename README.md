@@ -21,8 +21,27 @@ npm test
 ## 사진 파일
 
 - 대표 사진: `images/cover.webp`
-- 갤러리 사진: `images/gallery/01.webp`부터 `images/gallery/25.webp`까지
+- 갤러리 사진: `images/gallery/`에 원본 파일명으로 보관하며, `src/invitation.js`의 `GALLERY_PHOTOS` 목록 순서로 표시합니다.
+- 현재 사진은 총 17장으로, 한 페이지에 최대 6장씩 3페이지(6장·6장·5장)로 표시합니다.
+- 사진을 추가하거나 순서를 바꿀 때는 `GALLERY_PHOTOS` 목록도 함께 수정합니다.
 - 사진 파일이 없으면 깨진 이미지 대신 자리표시자가 표시됩니다.
+
+### 갤러리 최적화
+
+원본 JPG는 `images/gallery/`에 로컬로 보존하고 Git에서 제외합니다. 배포에는 `images/gallery/optimized/`의 WebP만 포함합니다.
+
+- `thumbnails/`: 긴 변 최대 480px, 품질 78. 갤러리 근처로 스크롤하면 불러옵니다.
+- `full/`: 긴 변 최대 1,800px, 품질 85. 사진 확대 시에만 불러옵니다.
+- 원본의 종횡비를 유지하고 EXIF 회전 정보를 반영합니다. 출력 파일에서는 촬영 메타데이터를 제거합니다.
+
+원본 사진이나 목록을 변경한 뒤에는 다음 명령으로 표시용 이미지를 다시 생성합니다.
+
+```bash
+npm install
+npm run optimize:gallery
+```
+
+변환 도구는 개발 시에만 사용합니다. 청첩장은 생성된 WebP를 포함하는 정적 사이트로 실행됩니다.
 
 ## 지도 버튼
 

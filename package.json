@@ -4,6 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "optimize:gallery": "node scripts/optimize-gallery.mjs"
+  },
+  "devDependencies": {
+    "sharp": "0.35.4"
   }
 }

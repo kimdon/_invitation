@@ -25,11 +25,6 @@
   </head>
   <body>
     <main class="invitation" data-mode="normal" data-boot-state="idle">
-      <button class="mode-toggle" id="developer-toggle" type="button" aria-pressed="false">
-        <span class="mode-toggle__normal">&lt;/&gt; develop mode</span>
-        <span class="mode-toggle__developer">일반 모드로</span>
-      </button>
-
       <div class="developer-transition" id="developer-transition" aria-live="polite" hidden>
         <div class="developer-transition__bar">
           <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
@@ -80,7 +75,7 @@
           서로 다른 <span class="developer-term">branch</span>에서 시작된 두 사람이<br>
           수많은 <span class="developer-term">commit</span>으로 추억을 쌓아왔습니다.<br>
           가끔 예상하지 못한 <span class="developer-term">conflict</span>도 있었지만<br>
-          대화와 믿음으로 하나씩 resolve해 왔습니다.<br><br>
+          대화와 믿음으로 하나씩 <span class="developer-term">resolve</span>해 왔습니다.<br><br>
           이제 두 마음을 평생이라는 <span class="developer-term">main branch</span>에<br>
           <span class="developer-term">merge</span>하려 합니다.<br>
           저희의 새로운 release를 따뜻한 마음으로<br>
@@ -208,7 +203,17 @@
       <footer class="footer" data-developer-section="thanks" data-console-section="// section: thanks — complete">
         <p class="developer-command" aria-hidden="true">$ weddingctl complete --with-gratitude</p>
         <p class="footer__monogram">B &amp; D</p>
-        <p class="footer__thanks">Thank you</p>
+        <div class="footer__heading">
+          <button class="mode-toggle" id="developer-toggle" type="button" aria-pressed="false" title="화면 모드 전환">
+            <span class="mode-toggle__normal">
+              <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m7 7-5 5 5 5m10-10 5 5-5 5M14.5 4l-5 16"/>
+              </svg>
+              <span>develop mode</span>
+            </span>
+            <span class="mode-toggle__developer">일반 모드로</span>
+          </button>
+        </div>
       </footer>
 
       <div class="petal-layer" id="petal-layer" aria-hidden="true"></div>
