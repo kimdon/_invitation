@@ -2,21 +2,19 @@ import {
   AI_GUEST_MESSAGES,
   DEVELOPER_TRANSITION_COMMANDS,
   FIREWORK_BURST_PLAN,
+  GALLERY_PHOTOS,
   buildDeveloperSequence,
   buildCalendarWeeks,
   buildExternalMapLinks,
   buildGalleryPage,
   getAccountGroup,
   getDdayDisplay,
+  getGallerySources,
 } from "./invitation.js";
 
-const GALLERY_SIZE = 25;
-const GALLERY_PER_PAGE = 9;
+const GALLERY_SIZE = GALLERY_PHOTOS.length;
+const GALLERY_PER_PAGE = 6;
 const WEDDING_DATE = new Date(2026, 10, 21, 12);
-
-function gallerySource(number) {
-  return `./images/gallery/${String(number).padStart(2, "0")}.webp`;
-}
 
 function createPlaceholder(label, className = "gallery-placeholder") {
   const placeholder = document.createElement("div");
@@ -27,14 +25,15 @@ function createPlaceholder(label, className = "gallery-placeholder") {
   return placeholder;
 }
 
-function loadOptionalImage(source, alt, placeholder, onLoad) {
+function loadOptionalImage(source, alt, placeholder, { loading = "eager" } = {}) {
   const image = document.createElement("img");
   image.alt = alt;
-  image.hidden = true;
+  image.loading = loading;
+  image.decoding = "async";
+  image.hidden = loading !== "lazy";
   image.addEventListener("load", () => {
     placeholder.remove();
     image.hidden = false;
-    onLoad?.();
   }, { once: true });
   image.addEventListener("error", () => image.remove(), { once: true });
   image.src = source;
@@ -93,7 +92,7 @@ function setupPhotoViewer() {
     const empty = document.createElement("p");
     empty.className = "photo-viewer__empty";
     empty.textContent = "이 칸에는 아직 사진이 없습니다";
-    const image = loadOptionalImage(gallerySource(current), `사진 ${current}`, empty);
+    const image = loadOptionalImage(getGallerySources(current).full, `사진 ${current}`, empty);
     content.append(empty, image);
   }
 
@@ -148,7 +147,7 @@ function createGalleryItem(number, openViewer) {
   item.className = "gallery-item";
 
   const placeholder = createPlaceholder(`사진 ${number}`);
-  const image = loadOptionalImage(gallerySource(number), `사진 ${number}`, placeholder);
+  const image = loadOptionalImage(getGallerySources(number).thumbnail, `사진 ${number}`, placeholder, { loading: "lazy" });
   const button = document.createElement("button");
   button.type = "button";
   button.className = "gallery-open";

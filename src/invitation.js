@@ -1,5 +1,25 @@
 const DAY_MS = 86_400_000;
 
+export const GALLERY_PHOTOS = Object.freeze([
+  "./images/gallery/IMG_1239.JPG",
+  "./images/gallery/IMG_6924.JPG",
+  "./images/gallery/IMG_6963.JPG",
+  "./images/gallery/IMG_6964.JPG",
+  "./images/gallery/IMG_6965.JPG",
+  "./images/gallery/IMG_6966.JPG",
+  "./images/gallery/IMG_6968.JPG",
+  "./images/gallery/IMG_6973.JPG",
+  "./images/gallery/IMG_6977.JPG",
+  "./images/gallery/IMG_6978.JPG",
+  "./images/gallery/IMG_6979.JPG",
+  "./images/gallery/IMG_6980.JPG",
+  "./images/gallery/IMG_6981.JPG",
+  "./images/gallery/IMG_6983.JPG",
+  "./images/gallery/IMG_9159.JPG",
+  "./images/gallery/IMG_9239.JPG",
+  "./images/gallery/IMG_9337.JPG",
+]);
+
 const ACCOUNT_GROUPS = {
   groom: [
     { role: "신랑", bank: "국민은행", number: "000000-01-000001", holder: "김병관" },
@@ -137,6 +157,14 @@ export function buildExternalMapLinks(venue) {
   return {
     kakao: `https://map.kakao.com/link/search/${query}`,
     naver: `https://map.naver.com/p/search/${query}`,
+  };
+}
+
+export function getGallerySources(number) {
+  const filename = GALLERY_PHOTOS[number - 1].split("/").pop().replace(/\.[^.]+$/, ".webp");
+  return {
+    thumbnail: `./images/gallery/optimized/thumbnails/${filename}`,
+    full: `./images/gallery/optimized/full/${filename}`,
   };
 }
 

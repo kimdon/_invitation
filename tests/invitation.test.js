@@ -1,17 +1,23 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir, stat } from "node:fs/promises";
+import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
 
 import {
   AI_GUEST_MESSAGES,
   DEVELOPER_TRANSITION_COMMANDS,
+  GALLERY_PHOTOS,
   WEDDING_RELEASE,
   buildDeveloperSequence,
   buildCalendarWeeks,
   buildExternalMapLinks,
   getDdayDisplay,
+  getGallerySources,
 } from "../src/invitation.js";
+
+const sharp = createRequire(import.meta.url)("sharp");
 
 const EXPECTED_AI_ICON_PATHS = [
   "./images/ai-icons/codex.png",
@@ -71,18 +77,50 @@ test("buildExternalMapLinks creates Kakao and Naver searches for the venue only"
   );
 });
 
-test("buildGalleryPage returns a bounded nine-photo page", async () => {
+test("gallery sources include every optimized photo exactly once", async () => {
+  assert.ok(GALLERY_PHOTOS.length > 0);
+  assert.equal(new Set(GALLERY_PHOTOS).size, GALLERY_PHOTOS.length);
+  for (const [variant, directory] of [["thumbnail", "thumbnails"], ["full", "full"]]) {
+    const files = await readdir(new URL(`../images/gallery/optimized/${directory}/`, import.meta.url));
+    const paths = files.filter((name) => name.endsWith(".webp"))
+      .map((name) => `./images/gallery/optimized/${directory}/${name}`).sort();
+    const listed = GALLERY_PHOTOS.map((_, index) => getGallerySources(index + 1)[variant]).sort();
+    assert.deepEqual(listed, paths);
+  }
+});
+
+test("optimized gallery assets preserve photo shape with bounded dimensions and sizes", async () => {
+  for (const index of GALLERY_PHOTOS.keys()) {
+    const sources = getGallerySources(index + 1);
+    const fullUrl = new URL(`../${sources.full}`, import.meta.url);
+    const fullMeta = await sharp(fileURLToPath(fullUrl)).metadata();
+    const fullRatio = fullMeta.width / fullMeta.height;
+
+    for (const [variant, maxEdge, maxBytes] of [["thumbnail", 480, 200_000], ["full", 1800, 750_000]]) {
+      const outputUrl = new URL(`../${sources[variant]}`, import.meta.url);
+      const metadata = await sharp(fileURLToPath(outputUrl)).metadata();
+      assert.equal(metadata.format, "webp");
+      assert.ok(metadata.width > 0 && metadata.height > 0);
+      assert.ok(Math.max(metadata.width, metadata.height) <= maxEdge);
+      assert.ok(Math.abs(metadata.width / metadata.height - fullRatio) < 0.01);
+      assert.equal(metadata.exif, undefined);
+      assert.ok((await stat(outputUrl)).size < maxBytes, `${sources[variant]} exceeds its size budget`);
+    }
+  }
+});
+
+test("buildGalleryPage returns three pages without missing-photo slots", async () => {
   const { buildGalleryPage } = await import("../src/invitation.js");
   assert.equal(typeof buildGalleryPage, "function");
-  assert.deepEqual(buildGalleryPage(25, 9, 0), {
+  assert.deepEqual(buildGalleryPage(GALLERY_PHOTOS.length, 6, 0), {
     page: 0,
     pageCount: 3,
-    items: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+    items: [1, 2, 3, 4, 5, 6],
   });
-  assert.deepEqual(buildGalleryPage(25, 9, 99), {
+  assert.deepEqual(buildGalleryPage(GALLERY_PHOTOS.length, 6, 99), {
     page: 2,
     pageCount: 3,
-    items: [19, 20, 21, 22, 23, 24, 25],
+    items: [13, 14, 15, 16, 17],
   });
 });
 
@@ -187,6 +225,8 @@ test("the app wires the approved invitation interactions", async () => {
   const app = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
 
   assert.match(app, /buildGalleryPage/);
+  assert.match(app, /const GALLERY_SIZE = GALLERY_PHOTOS\.length;/);
+  assert.match(app, /const GALLERY_PER_PAGE = 6;/);
   assert.match(app, /getAccountGroup/);
   assert.match(app, /showModal\(\)/);
   assert.match(app, /navigator\.clipboard\.writeText/);
@@ -246,7 +286,7 @@ test("developer invitation terms use developer-mode-only highlight markup", asyn
     readFile(new URL("../index.html", import.meta.url), "utf8"),
     readFile(new URL("../styles.css", import.meta.url), "utf8"),
   ]);
-  const highlightedTerms = ["branch", "commit", "conflict", "main branch", "merge", "approve"];
+  const highlightedTerms = ["branch", "commit", "conflict", "resolve", "main branch", "merge", "approve"];
 
   for (const term of highlightedTerms) {
     assert.match(html, new RegExp(`<span class="developer-term">${term}</span>`));
@@ -422,6 +462,10 @@ test("the page exposes one shared invitation DOM with accessible developer contr
 
   assert.match(html, /<main class="invitation" data-mode="normal" data-boot-state="idle">/);
   assert.match(html, /id="developer-toggle"[^>]+aria-pressed="false"/);
+  const footer = html.match(/<footer\b[^>]*>([\s\S]*?)<\/footer>/)?.[1] ?? "";
+  assert.match(footer, /id="developer-toggle"/);
+  assert.match(footer, /develop mode/);
+  assert.doesNotMatch(footer, /class="footer__thanks"/);
   assert.match(html, /id="developer-transition"[^>]+aria-live="polite"[^>]+hidden/);
   assert.match(html, /id="developer-transition-lines"[^>]+role="log"/);
   assert.match(html, /id="ai-agent-selector"/);
@@ -445,6 +489,7 @@ test("the page exposes one shared invitation DOM with accessible developer contr
   assert.match(app, /FINAL APPROVAL COMPLETE — wedding-v1\.0 is ready to merge ♥/);
   assert.match(app, /length: 72/);
   assert.match(css, /\.invitation\[data-mode="developer"\]/);
+  assert.match(css, /\.mode-toggle\s*\{[^}]*position:\s*relative[^}]*margin:\s*0 auto 32px/s);
   assert.match(css, /\.developer-rsvp/);
   assert.match(css, /prefers-reduced-motion:\s*reduce/);
 

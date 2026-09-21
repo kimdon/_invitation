@@ -355,6 +355,8 @@ a {
 }
 
 .gallery-item img {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
@@ -788,11 +790,11 @@ a {
 }
 
 .mode-toggle {
-  position: absolute;
+  position: relative;
   z-index: 80;
-  top: 18px;
-  right: 18px;
+  display: block;
   min-height: 44px;
+  margin: 0 auto 32px;
   padding: 0 14px;
   border: 1px solid rgba(244, 239, 231, 0.52);
   border-radius: 999px;
@@ -982,10 +984,67 @@ a {
   letter-spacing: 0.25em;
 }
 
-.invitation[data-mode="normal"] .mode-toggle {
-  border-color: var(--ink);
-  background: rgba(255, 255, 255, 0.92);
-  color: var(--ink);
+.invitation[data-mode="normal"] .footer__heading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+}
+.invitation[data-mode="normal"] .footer__heading .mode-toggle {
+  display: grid;
+  place-items: center;
+  width: auto;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #333333;
+  backdrop-filter: none;
+  transition: color 160ms ease, background-color 160ms ease;
+}
+.invitation[data-mode="normal"] .mode-toggle__normal {
+  display: flex;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 18px;
+  border: 1px solid #bdbdbd;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #ffffff 0%, #f1f1f1 100%);
+  box-shadow: 0 3px 0 #d1d1d1, 0 5px 9px rgba(0, 0, 0, 0.09);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+.invitation[data-mode="normal"] .mode-toggle__normal svg {
+  stroke-width: 1.7;
+}
+@media (hover: hover) {
+  .invitation[data-mode="normal"] .footer__heading .mode-toggle:hover .mode-toggle__normal {
+    border-color: #888888;
+    box-shadow: 0 4px 0 #c8c8c8, 0 7px 12px rgba(0, 0, 0, 0.12);
+    transform: translateY(-1px);
+  }
+}
+.invitation[data-mode="normal"] .footer__heading .mode-toggle:active .mode-toggle__normal {
+  border-color: #999999;
+  box-shadow: 0 1px 0 #c8c8c8, inset 0 1px 3px rgba(0, 0, 0, 0.08);
+  transform: translateY(2px);
+}
+.invitation[data-mode="normal"] .footer__heading .mode-toggle:focus-visible {
+  outline: 2px solid #747474;
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .invitation[data-mode="normal"] .footer__heading .mode-toggle,
+  .invitation[data-mode="normal"] .mode-toggle__normal {
+    transition: none;
+  }
 }
 
 .invitation[data-mode="normal"] .section {
@@ -1185,6 +1244,7 @@ body.is-developer-mode .petal-layer {
 }
 
 .invitation[data-mode="developer"] .mode-toggle {
+  margin: 24px auto 0;
   border-color: #315b40;
   background: rgba(7, 17, 12, 0.88);
   color: var(--terminal-green);
