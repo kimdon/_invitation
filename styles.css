@@ -339,12 +339,26 @@ a {
   margin-left: auto;
 }
 
+.gallery-viewport {
+  position: relative;
+}
+
 .gallery-grid {
   display: grid;
   padding: 0 12px;
   touch-action: pan-y;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 4px;
+}
+
+.gallery-grid--outgoing {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.gallery-grid[aria-busy="true"] {
+  cursor: progress;
 }
 
 .gallery-item {
@@ -477,21 +491,61 @@ a {
 }
 
 .map-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   margin-top: 12px;
   gap: 8px;
 }
 
 .map-button {
-  flex: 1;
-  padding: 13px 4px;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 48px;
+  gap: 4px;
+  padding: 10px 6px;
   border: 1px solid var(--ink);
   border-radius: 2px;
   color: var(--ink);
   font-size: 13px;
   font-weight: 500;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   text-align: center;
+  white-space: nowrap;
+}
+
+.map-button__icon {
+  display: block;
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  object-fit: contain;
+  background: #ffffff;
+}
+
+.map-button__label {
+  flex: 1;
+}
+
+.map-fallback {
+  margin-top: 10px;
+  color: inherit;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.map-fallback__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 8px;
+  padding: 8px 14px;
+  border: 1px solid currentColor;
+  border-radius: 10px;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .map-button--primary {
@@ -553,12 +607,6 @@ a {
   padding: 56px 40px 68px;
   background: var(--paper);
   text-align: center;
-}
-
-.footer__monogram {
-  font-family: Gulim, "굴림", sans-serif;
-  font-size: 30px;
-  font-style: italic;
 }
 
 .footer__thanks {
@@ -683,6 +731,13 @@ a {
   max-height: none;
   background: rgba(14, 12, 10, 0.98);
   color: var(--paper);
+  overflow: hidden;
+  overscroll-behavior: contain;
+  touch-action: none;
+}
+
+.photo-viewer * {
+  touch-action: none;
 }
 
 .photo-viewer[open] {
@@ -704,13 +759,28 @@ a {
 }
 
 .photo-viewer__content {
-  display: flex;
+  position: relative;
   min-height: 0;
   flex: 1;
+  overflow: hidden;
+  touch-action: none;
+}
+
+.photo-viewer__track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+.photo-viewer__frame {
+  display: flex;
+  flex: 0 0 100%;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
   align-items: center;
   justify-content: center;
   padding: 0 12px 12px;
-  touch-action: none;
 }
 
 .photo-viewer__content img {
@@ -718,11 +788,18 @@ a {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
-.photo-viewer__empty {
+.photo-viewer__status {
+  min-height: 32px;
+  margin: 0;
+  padding: 0 18px 12px;
   color: #a89a80;
-  font-size: 14px;
+  font-size: 13px;
+  line-height: 20px;
+  text-align: center;
 }
 
 .photo-viewer__controls {
@@ -744,6 +821,11 @@ a {
   color: var(--paper);
   cursor: pointer;
   font-size: 19px;
+}
+
+.photo-viewer__controls button:disabled {
+  opacity: 0.4;
+  cursor: progress;
 }
 
 .copy-toast {
@@ -1182,10 +1264,6 @@ a {
   background: var(--paper);
 }
 
-.invitation[data-mode="normal"] .footer__monogram {
-  display: none;
-}
-
 body:not(.is-developer-mode) .account-dialog {
   background: var(--paper);
   color: var(--text);
@@ -1527,6 +1605,10 @@ body.is-developer-mode .petal-layer {
   font-family: inherit;
 }
 
+.invitation[data-mode="developer"] .map-note {
+  color: var(--terminal-dim);
+}
+
 .invitation[data-mode="developer"] .transport strong {
   color: var(--terminal-blue);
 }
@@ -1726,13 +1808,6 @@ body.is-developer-mode .petal-layer {
   text-align: left;
 }
 
-.invitation[data-mode="developer"] .footer__monogram {
-  color: var(--terminal-pink);
-  font-family: inherit;
-  font-style: normal;
-  text-align: center;
-}
-
 .invitation[data-mode="developer"] .footer__thanks {
   color: var(--terminal-green);
   font-family: inherit;
@@ -1835,6 +1910,16 @@ body.is-developer-mode .petal-layer {
   }
   50% {
     margin-left: 22px;
+  }
+}
+
+@media (max-width: 400px) {
+  .map-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .map-button {
+    padding: 10px 12px;
   }
 }
 
