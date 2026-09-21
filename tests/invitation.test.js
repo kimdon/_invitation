@@ -264,7 +264,7 @@ test("the app wires the approved invitation interactions", async () => {
   assert.match(app, /ArrowRight/);
   assert.match(app, /IntersectionObserver/);
   assert.match(app, /getBoundingClientRect\(\)/);
-  assert.match(app, /addEventListener\("scroll"/);
+  assert.doesNotMatch(app, /addEventListener\("scroll"/);
   assert.match(
     app,
     /appendTransition\("Switched to branch 'develop' ✓", true\);\s*await wait\(1000\);/s,
