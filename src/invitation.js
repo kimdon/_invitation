@@ -81,7 +81,7 @@ export const AI_GUEST_MESSAGES = Object.freeze([
   Object.freeze({
     icon: "K*",
     iconSrc: "./images/ai-icons/kimi.svg",
-    name: "Kimi · 키미",
+    name: "Kimi",
     handle: "@kimi",
     accent: "#7ee787",
     request: "[CONTEXT REVIEW] wedding-v1.0의 긴 대화 기록을 살펴보니 신뢰 데이터가 충분합니다. 추억 저장 공간도 넉넉하네요.",
@@ -90,7 +90,7 @@ export const AI_GUEST_MESSAGES = Object.freeze([
   Object.freeze({
     icon: "✦",
     iconSrc: "./images/ai-icons/gemini.png",
-    name: "Gemini · 제미나이",
+    name: "Gemini",
     handle: "@gemini",
     accent: "#ff7b9c",
     request: "[MULTIMODAL REVIEW] wedding-v1.0에 웃음, 눈빛, 약속이 모두 정상 입력됐습니다. 미래 호환성도 아주 좋습니다.",
@@ -157,7 +157,45 @@ export function buildExternalMapLinks(venue) {
   return {
     kakao: `https://map.kakao.com/link/search/${query}`,
     naver: `https://map.naver.com/p/search/${query}`,
+    tmap: `https://www.tmap.co.kr/tmap2/mobile/search.jsp?name=${query}`,
   };
+}
+
+export function buildMobileMapLinks(venue, { userAgent = "", maxTouchPoints = 0, pageUrl }) {
+  const android = /Android/i.test(userAgent);
+  const ios = /iPhone|iPad|iPod/i.test(userAgent) || (/Macintosh/i.test(userAgent) && maxTouchPoints > 1);
+  if (!android && !ios) return null;
+
+  const query = encodeURIComponent(venue);
+  const web = buildExternalMapLinks(venue);
+  const links = {
+    kakao: {
+      app: `kakaomap://search?q=${query}`,
+      fallback: web.kakao,
+      fallbackLabel: "카카오 웹 지도에서 검색",
+    },
+    naver: {
+      app: `nmap://search?query=${query}&appname=${encodeURIComponent(pageUrl)}`,
+      fallback: web.naver,
+      fallbackLabel: "네이버 웹 지도에서 검색",
+    },
+    tmap: {
+      // TMAP's official search bridge uses different search parameters on iOS.
+      app: android ? `tmap://search?name=${query}` : `tmap://?search=${query}`,
+      fallback: android ? "https://play.google.com/store/apps/details?id=com.skt.tmap.ku" : "https://apps.apple.com/kr/app/id431589174",
+      fallbackLabel: android ? "Google Play에서 TMAP 설치" : "App Store에서 TMAP 설치",
+    },
+  };
+  if (android) {
+    const packages = { kakao: "net.daum.android.map", naver: "com.nhn.android.nmap" };
+    for (const [provider, link] of Object.entries(links)) {
+      const [scheme, path] = link.app.split("://");
+      // Do not pin TMAP to one package: carrier editions share the tmap scheme.
+      const packagePart = packages[provider] ? `package=${packages[provider]};` : "";
+      link.app = `intent://${path}#Intent;scheme=${scheme};action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;${packagePart}S.browser_fallback_url=${encodeURIComponent(link.fallback)};end`;
+    }
+  }
+  return links;
 }
 
 export function getGallerySources(number) {
