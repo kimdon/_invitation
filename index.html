@@ -123,7 +123,9 @@
         <p class="developer-command" aria-hidden="true">$ weddingctl gallery --interactive</p>
         <h2 class="section-kicker" id="gallery-title">Gallery</h2>
         <div class="section-rule" aria-hidden="true"></div>
-        <div class="gallery-grid" id="gallery-grid"></div>
+        <div class="gallery-viewport">
+          <div class="gallery-grid" id="gallery-grid" aria-busy="false"></div>
+        </div>
         <div class="gallery-controls">
           <button class="gallery-arrow" id="gallery-prev" type="button" aria-label="이전 사진 페이지">‹</button>
           <div class="gallery-dots" id="gallery-dots" aria-label="갤러리 페이지 선택"></div>
@@ -148,17 +150,38 @@
           <a
             class="map-button map-button--primary"
             id="kakao-link"
+            aria-label="카카오맵 길찾기"
             href="https://map.kakao.com/link/search/%EB%B3%B4%ED%83%80%EB%8B%89%20%EC%9B%A8%EB%94%A9%ED%8C%8C%ED%81%AC"
             target="_blank"
             rel="noopener noreferrer"
-          >카카오맵 길찾기</a>
+          >
+            <img class="map-button__icon" src="./images/map-icons/kakao.svg" alt="" width="22" height="22" loading="lazy" decoding="async">
+            <span class="map-button__label">카카오맵</span>
+          </a>
           <a
             class="map-button"
             id="naver-link"
             href="https://map.naver.com/p/search/%EB%B3%B4%ED%83%80%EB%8B%89%20%EC%9B%A8%EB%94%A9%ED%8C%8C%ED%81%AC"
             target="_blank"
             rel="noopener noreferrer"
-          >네이버지도</a>
+          >
+            <img class="map-button__icon" src="./images/map-icons/naver.svg" alt="" width="22" height="22" loading="lazy" decoding="async">
+            <span class="map-button__label">네이버지도</span>
+          </a>
+          <a
+            class="map-button"
+            id="tmap-link"
+            href="https://www.tmap.co.kr/tmap2/mobile/search.jsp?name=%EB%B3%B4%ED%83%80%EB%8B%89%20%EC%9B%A8%EB%94%A9%ED%8C%8C%ED%81%AC"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img class="map-button__icon" src="./images/map-icons/tmap.svg" alt="" width="22" height="22" loading="lazy" decoding="async">
+            <span class="map-button__label">TMAP</span>
+          </a>
+        </div>
+        <div class="map-fallback" id="map-fallback" hidden>
+          <p id="map-fallback-message" role="status" aria-live="polite"></p>
+          <a class="map-fallback__link" id="map-fallback-link" target="_blank" rel="noopener noreferrer">다른 방법으로 열기</a>
         </div>
         <div class="transport">
           <p><strong>지하철</strong><br>5호선 발산역 3번 출구에서 도보 8분</p>
@@ -202,7 +225,6 @@
 
       <footer class="footer" data-developer-section="thanks" data-console-section="// section: thanks — complete">
         <p class="developer-command" aria-hidden="true">$ weddingctl complete --with-gratitude</p>
-        <p class="footer__monogram">B &amp; D</p>
         <div class="footer__heading">
           <button class="mode-toggle" id="developer-toggle" type="button" aria-pressed="false" title="화면 모드 전환">
             <span class="mode-toggle__normal">
@@ -233,7 +255,8 @@
         <p id="photo-viewer-label">사진</p>
         <button class="dialog__close dialog__close--dark" id="photo-viewer-close" type="button" aria-label="사진 닫기">✕</button>
       </div>
-      <div class="photo-viewer__content" id="photo-viewer-content"></div>
+      <div class="photo-viewer__content" id="photo-viewer-content" aria-busy="false"></div>
+      <p class="photo-viewer__status" id="photo-viewer-status" role="status" aria-live="polite"></p>
       <div class="photo-viewer__controls">
         <button id="photo-viewer-prev" type="button" aria-label="이전 사진">‹</button>
         <button id="photo-viewer-next" type="button" aria-label="다음 사진">›</button>

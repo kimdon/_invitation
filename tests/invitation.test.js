@@ -64,7 +64,7 @@ test("getDdayDisplay returns complete future, today, and past sentence parts", (
   );
 });
 
-test("buildExternalMapLinks creates Kakao and Naver searches for the venue only", () => {
+test("buildExternalMapLinks creates Kakao, Naver and TMAP searches for the venue only", () => {
   const links = buildExternalMapLinks("보타닉 웨딩파크");
 
   assert.equal(
@@ -75,6 +75,35 @@ test("buildExternalMapLinks creates Kakao and Naver searches for the venue only"
     links.naver,
     "https://map.naver.com/p/search/%EB%B3%B4%ED%83%80%EB%8B%89%20%EC%9B%A8%EB%94%A9%ED%8C%8C%ED%81%AC",
   );
+  assert.equal(
+    links.tmap,
+    "https://www.tmap.co.kr/tmap2/mobile/search.jsp?name=%EB%B3%B4%ED%83%80%EB%8B%89%20%EC%9B%A8%EB%94%A9%ED%8C%8C%ED%81%AC",
+  );
+});
+
+test("map buttons use flat black symbols on white SVG backgrounds before readable labels", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
+  const iconStyle = css.match(/\.map-button__icon\s*\{([^}]*)\}/)?.[1] ?? "";
+  assert.match(iconStyle, /background:\s*#ffffff/);
+  assert.doesNotMatch(iconStyle, /filter:/);
+  for (const provider of ["kakao", "naver", "tmap"]) {
+    const button = html.match(new RegExp(`<a\\b[^>]*id="${provider}-link"[^>]*>([\\s\\S]*?)<\\/a>`))?.[1] ?? "";
+    assert.match(button, new RegExp(`<img[^>]*class="map-button__icon"[^>]*src="\\./images/map-icons/${provider}\\.svg"[^>]*alt=""`));
+    assert.match(button, /<span class="map-button__label">[^<]+<\/span>/);
+    assert.ok(button.indexOf("<img") < button.indexOf("<span"));
+    const asset = new URL(`../images/map-icons/${provider}.svg`, import.meta.url);
+    const svg = await readFile(asset, "utf8");
+    assert.match(svg, /<rect[^>]*fill="#ffffff"/);
+    assert.match(svg, /fill="#000000"/);
+    assert.doesNotMatch(svg, /gradient|filter|opacity|<image/i);
+    assert.deepEqual(new Set([...svg.matchAll(/fill="([^"]+)"/g)].map((match) => match[1])), new Set(["#ffffff", "#000000"]));
+    const metadata = await sharp(fileURLToPath(asset)).metadata();
+    assert.equal(metadata.format, "svg");
+    assert.equal(metadata.width, metadata.height);
+    assert.ok(metadata.width >= 44 && metadata.width <= 200);
+    assert.ok((await stat(asset)).size < 3_000);
+  }
 });
 
 test("gallery sources include every optimized photo exactly once", async () => {
@@ -146,6 +175,8 @@ test("the page exposes map buttons without loading map SDKs", async () => {
 
   assert.match(html, /id="kakao-link"/);
   assert.match(html, /id="naver-link"/);
+  assert.match(html, /id="tmap-link"/);
+  assert.match(app, /getElementById\("tmap-link"\)\.href = links\.tmap/);
   assert.match(app, /buildExternalMapLinks\("보타닉 웨딩파크"\)/);
   assert.doesNotMatch(source, /%20%EC%98%A4%ED%82%A4%EB%93%9C%ED%99%80/);
   assert.doesNotMatch(source, /dapi\.kakao\.com/);
@@ -214,8 +245,6 @@ test("the stylesheet defines the approved pure-white normal mode", async () => {
   assert.match(css, /\.invitation\[data-mode="normal"\] \.gallery-item\s*\{[^}]*border:\s*1px solid var\(--ink\)/s);
   assert.match(css, /\.invitation\[data-mode="normal"\] \.calendar__wedding-day\s*\{[^}]*border-radius:\s*50%[^}]*background:\s*var\(--ink\)[^}]*color:\s*var\(--paper\)/s);
   assert.match(css, /\.invitation\[data-mode="normal"\] \.map-button\s*\{[^}]*border-radius:\s*10px/s);
-  assert.match(css, /\.invitation\[data-mode="normal"\] \.footer__monogram\s*\{[^}]*display:\s*none/s);
-  assert.match(css, /\.invitation\[data-mode="developer"\] \.footer__monogram\s*\{/);
   assert.match(css, /\.invitation\[data-mode="developer"\] \.section\s*\{/);
   assert.match(css, /\.photo-viewer__content\s*\{[^}]*touch-action:\s*none/s);
   assert.match(css, /@media\s*\(prefers-reduced-motion:\s*reduce\)/);
@@ -335,8 +364,8 @@ test("AI guest messages contain exactly the five approved agents and complete ca
     "Codex",
     "Claude",
     "Cursor",
-    "Kimi · 키미",
-    "Gemini · 제미나이",
+    "Kimi",
+    "Gemini",
   ]);
   assert.equal(new Set(AI_GUEST_MESSAGES.map((agent) => agent.accent)).size, 5);
   assert.deepEqual(AI_GUEST_MESSAGES.map((agent) => agent.iconSrc), EXPECTED_AI_ICON_PATHS);
@@ -466,6 +495,7 @@ test("the page exposes one shared invitation DOM with accessible developer contr
   assert.match(footer, /id="developer-toggle"/);
   assert.match(footer, /develop mode/);
   assert.doesNotMatch(footer, /class="footer__thanks"/);
+  assert.doesNotMatch(footer, /footer__monogram|B &amp; D/);
   assert.match(html, /id="developer-transition"[^>]+aria-live="polite"[^>]+hidden/);
   assert.match(html, /id="developer-transition-lines"[^>]+role="log"/);
   assert.match(html, /id="ai-agent-selector"/);

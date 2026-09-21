@@ -6,6 +6,7 @@ import {
   buildDeveloperSequence,
   buildCalendarWeeks,
   buildExternalMapLinks,
+  buildMobileMapLinks,
   buildGalleryPage,
   getAccountGroup,
   getDdayDisplay,
@@ -83,33 +84,106 @@ function setupPhotoViewer() {
   const closeButton = document.getElementById("photo-viewer-close");
   const previous = document.getElementById("photo-viewer-prev");
   const next = document.getElementById("photo-viewer-next");
+  const status = document.getElementById("photo-viewer-status");
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   let current = 1;
-  let touchStart = null;
+  let activeFrame = null;
+  let busy = false;
+  let requestId = 0;
+  let animation = null;
+  let gestureStart = null;
+  let multiTouch = false;
+  let touchCount = 0;
+  let lastTap = null;
 
-  function render() {
-    content.replaceChildren();
-    label.textContent = `${current} / ${GALLERY_SIZE}`;
-    const empty = document.createElement("p");
-    empty.className = "photo-viewer__empty";
-    empty.textContent = "이 칸에는 아직 사진이 없습니다";
-    const image = loadOptionalImage(getGallerySources(current).full, `사진 ${current}`, empty);
-    content.append(empty, image);
+  function updateControls() {
+    previous.disabled = busy;
+    next.disabled = busy;
+    content.setAttribute("aria-busy", String(busy));
+  }
+
+  async function render(number, direction = 0) {
+    if (busy || !dialog.open) return;
+    const request = ++requestId;
+    busy = true;
+    updateControls();
+    status.textContent = activeFrame ? "다음 사진을 불러오는 중입니다." : "사진을 불러오는 중입니다.";
+    try {
+      const image = document.createElement("img");
+      image.alt = `사진 ${number}`;
+      image.decoding = "async";
+      image.draggable = false;
+      image.src = getGallerySources(number).full;
+      await image.decode();
+      if (request !== requestId || !dialog.open) return;
+
+      const incoming = document.createElement("div");
+      incoming.className = "photo-viewer__frame";
+      incoming.append(image);
+      status.textContent = "";
+      if (activeFrame && direction && !reducedMotion.matches && typeof content.animate === "function") {
+        const track = document.createElement("div");
+        track.className = "photo-viewer__track";
+        // Full-width neighboring panes slide together; the photos never overlap.
+        track.append(...(direction > 0 ? [activeFrame, incoming] : [incoming, activeFrame]));
+        content.replaceChildren(track);
+        animation = track.animate([
+          { transform: direction > 0 ? "translateX(0)" : "translateX(-100%)" },
+          { transform: direction > 0 ? "translateX(-100%)" : "translateX(0)" },
+        ], { duration: 220, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "forwards" });
+        await animation.finished.catch(() => {});
+        if (request !== requestId || !dialog.open) return;
+      }
+      content.replaceChildren(incoming);
+      activeFrame = incoming;
+      current = number;
+      label.textContent = `${current} / ${GALLERY_SIZE}`;
+    } catch {
+      if (request === requestId && dialog.open) {
+        status.textContent = `사진 ${number}을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.`;
+      }
+    } finally {
+      if (request === requestId) {
+        animation = null;
+        busy = false;
+        updateControls();
+      }
+    }
   }
 
   function move(offset) {
-    current = ((current - 1 + offset + GALLERY_SIZE) % GALLERY_SIZE) + 1;
-    render();
+    if (busy || multiTouch) return;
+    render(((current - 1 + offset + GALLERY_SIZE) % GALLERY_SIZE) + 1, offset);
+  }
+
+  function reset() {
+    requestId += 1;
+    animation?.cancel();
+    animation = null;
+    activeFrame = null;
+    busy = false;
+    gestureStart = null;
+    multiTouch = false;
+    touchCount = 0;
+    lastTap = null;
+    content.replaceChildren();
+    status.textContent = "";
+    updateControls();
   }
 
   function close() {
+    reset();
     if (dialog.open) dialog.close();
+    document.body.classList.remove("is-locked");
   }
 
   function show(number) {
+    reset();
     current = number;
-    render();
+    label.textContent = `${current} / ${GALLERY_SIZE}`;
     if (!dialog.open) dialog.showModal();
     document.body.classList.add("is-locked");
+    render(number);
   }
 
   closeButton.addEventListener("click", close);
@@ -118,36 +192,96 @@ function setupPhotoViewer() {
   dialog.addEventListener("click", (event) => {
     if (event.target === dialog) close();
   });
-  dialog.addEventListener("close", () => document.body.classList.remove("is-locked"));
+  dialog.addEventListener("close", () => {
+    if (dialog.open) return;
+    reset();
+    document.body.classList.remove("is-locked");
+  });
   document.addEventListener("keydown", (event) => {
     if (!dialog.open) return;
     if (event.key === "ArrowLeft") move(-1);
     if (event.key === "ArrowRight") move(1);
   });
-  content.addEventListener("touchstart", (event) => {
-    const touch = event.changedTouches[0];
-    touchStart = { x: touch.clientX, y: touch.clientY };
-  }, { passive: true });
-  content.addEventListener("touchend", (event) => {
-    if (!touchStart) return;
-    const touch = event.changedTouches[0];
-    const dx = touch.clientX - touchStart.x;
-    const dy = touch.clientY - touchStart.y;
-    touchStart = null;
-    if (Math.abs(dx) > 46 && Math.abs(dx) > Math.abs(dy) * 1.4) {
-      move(dx < 0 ? 1 : -1);
+  const preventZoom = (event) => { if (event.cancelable) event.preventDefault(); };
+  const touchOptions = { passive: false, capture: true };
+  dialog.addEventListener("touchstart", (event) => {
+    touchCount = event.touches.length;
+    if (event.touches.length !== 1 || multiTouch) {
+      multiTouch = true;
+      gestureStart = null;
+      lastTap = null;
+      preventZoom(event);
+      return;
     }
-  }, { passive: true });
+    const touch = event.touches[0];
+    gestureStart = { id: touch.identifier, x: touch.clientX, y: touch.clientY, canSwipe: content.contains(event.target) };
+  }, touchOptions);
+  dialog.addEventListener("touchmove", (event) => {
+    touchCount = event.touches.length;
+    if (event.touches.length > 1) {
+      multiTouch = true;
+      gestureStart = null;
+      lastTap = null;
+    }
+    preventZoom(event);
+  }, touchOptions);
+  dialog.addEventListener("touchend", (event) => {
+    touchCount = event.touches.length;
+    if (multiTouch) {
+      gestureStart = null;
+      lastTap = null;
+      preventZoom(event);
+      if (event.touches.length === 0) multiTouch = false;
+      return;
+    }
+    if (!gestureStart || event.touches.length) return;
+    const start = gestureStart;
+    gestureStart = null;
+    const touch = Array.from(event.changedTouches).find((item) => item.identifier === start.id);
+    if (!touch) return;
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (start.canSwipe && Math.abs(dx) > 46 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+      lastTap = null;
+      preventZoom(event);
+      move(dx < 0 ? 1 : -1);
+    } else if (Math.abs(dx) < 12 && Math.abs(dy) < 12) {
+      if (lastTap && event.timeStamp - lastTap.time < 300 && Math.abs(touch.clientX - lastTap.x) < 24 && Math.abs(touch.clientY - lastTap.y) < 24) {
+        preventZoom(event);
+        lastTap = null;
+      } else {
+        lastTap = { time: event.timeStamp, x: touch.clientX, y: touch.clientY };
+      }
+    } else {
+      lastTap = null;
+    }
+  }, touchOptions);
+  dialog.addEventListener("touchcancel", (event) => {
+    touchCount = event.touches.length;
+    gestureStart = null;
+    lastTap = null;
+    multiTouch = event.touches.length > 0;
+  }, touchOptions);
+  for (const type of ["gesturestart", "gesturechange", "gestureend"]) {
+    dialog.addEventListener(type, (event) => {
+      multiTouch = touchCount > 0;
+      gestureStart = null;
+      lastTap = null;
+      preventZoom(event);
+    }, touchOptions);
+  }
+  dialog.addEventListener("dblclick", preventZoom);
+  dialog.addEventListener("wheel", (event) => { if (event.ctrlKey) preventZoom(event); }, { passive: false });
 
   return show;
 }
 
-function createGalleryItem(number, openViewer) {
+function createGalleryItem(number, openViewer, loading = "lazy") {
   const item = document.createElement("div");
   item.className = "gallery-item";
 
   const placeholder = createPlaceholder(`사진 ${number}`);
-  const image = loadOptionalImage(getGallerySources(number).thumbnail, `사진 ${number}`, placeholder, { loading: "lazy" });
+  const image = loadOptionalImage(getGallerySources(number).thumbnail, `사진 ${number}`, placeholder, { loading });
   const button = document.createElement("button");
   button.type = "button";
   button.className = "gallery-open";
@@ -165,41 +299,82 @@ function setupGallery(openViewer) {
   const pageLabel = document.getElementById("gallery-page");
   const previous = document.getElementById("gallery-prev");
   const next = document.getElementById("gallery-next");
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const cachedPages = new Map();
+  const pageCount = buildGalleryPage(GALLERY_SIZE, GALLERY_PER_PAGE, 0).pageCount;
   let page = 0;
+  let changing = false;
   let touchStart = null;
 
-  function render() {
-    const galleryPage = buildGalleryPage(GALLERY_SIZE, GALLERY_PER_PAGE, page);
-    page = galleryPage.page;
-    grid.replaceChildren(...galleryPage.items.map((number) => createGalleryItem(number, openViewer)));
-    dots.replaceChildren();
-
-    for (let index = 0; index < galleryPage.pageCount; index += 1) {
-      const dot = document.createElement("button");
-      dot.type = "button";
-      dot.className = `gallery-dot${index === page ? " is-active" : ""}`;
-      dot.setAttribute("aria-label", `갤러리 ${index + 1}페이지`);
-      dot.setAttribute("aria-current", index === page ? "page" : "false");
-      dot.addEventListener("click", () => {
-        page = index;
-        render();
-      });
-      dots.appendChild(dot);
+  function getPageItems(galleryPage, loading) {
+    if (!cachedPages.has(galleryPage.page)) {
+      cachedPages.set(galleryPage.page, galleryPage.items.map((number) => createGalleryItem(number, openViewer, loading)));
     }
-
-    previous.disabled = page === 0;
-    next.disabled = page === galleryPage.pageCount - 1;
-    pageLabel.textContent = `${page + 1} / ${galleryPage.pageCount}`;
+    return cachedPages.get(galleryPage.page);
   }
 
-  previous.addEventListener("click", () => {
-    page -= 1;
-    render();
-  });
-  next.addEventListener("click", () => {
-    page += 1;
-    render();
-  });
+  function updateControls() {
+    Array.from(dots.children).forEach((dot, index) => {
+      dot.classList.toggle("is-active", index === page);
+      dot.setAttribute("aria-current", index === page ? "page" : "false");
+      dot.disabled = changing;
+    });
+    previous.disabled = changing || page === 0;
+    next.disabled = changing || page === pageCount - 1;
+    pageLabel.textContent = `${page + 1} / ${pageCount}`;
+    grid.setAttribute("aria-busy", String(changing));
+  }
+
+  async function changePage(requestedPage) {
+    const galleryPage = buildGalleryPage(GALLERY_SIZE, GALLERY_PER_PAGE, requestedPage);
+    if (changing || galleryPage.page === page) return;
+    changing = true;
+    updateControls();
+    let outgoing;
+    try {
+      const items = getPageItems(galleryPage, "eager");
+      // Keep the current page visible until the incoming thumbnails can be painted.
+      await Promise.allSettled(items.flatMap((item) => Array.from(item.querySelectorAll("img"), (image) => {
+        image.loading = "eager";
+        return image.decode();
+      })));
+
+      if (!reducedMotion.matches && typeof grid.animate === "function") {
+        outgoing = grid.cloneNode(true);
+        outgoing.removeAttribute("id");
+        outgoing.removeAttribute("aria-busy");
+        outgoing.classList.add("gallery-grid--outgoing");
+        outgoing.setAttribute("aria-hidden", "true");
+        outgoing.inert = true;
+        grid.parentElement.appendChild(outgoing);
+      }
+      grid.replaceChildren(...items);
+      page = galleryPage.page;
+      updateControls();
+      if (outgoing) {
+        await outgoing.animate([{ opacity: 1 }, { opacity: 0 }], {
+          duration: 260,
+          easing: "ease-out",
+          fill: "forwards",
+        }).finished.catch(() => {});
+      }
+    } finally {
+      outgoing?.remove();
+      changing = false;
+      updateControls();
+    }
+  }
+
+  for (let index = 0; index < pageCount; index += 1) {
+    const dot = document.createElement("button");
+    dot.type = "button";
+    dot.className = "gallery-dot";
+    dot.setAttribute("aria-label", `갤러리 ${index + 1}페이지`);
+    dot.addEventListener("click", () => changePage(index));
+    dots.appendChild(dot);
+  }
+  previous.addEventListener("click", () => changePage(page - 1));
+  next.addEventListener("click", () => changePage(page + 1));
   grid.addEventListener("touchstart", (event) => {
     const touch = event.changedTouches[0];
     touchStart = { x: touch.clientX, y: touch.clientY };
@@ -211,12 +386,12 @@ function setupGallery(openViewer) {
     const dy = touch.clientY - touchStart.y;
     touchStart = null;
     if (Math.abs(dx) > 46 && Math.abs(dx) > Math.abs(dy) * 1.4) {
-      page += dx < 0 ? 1 : -1;
-      render();
+      changePage(page + (dx < 0 ? 1 : -1));
     }
   }, { passive: true });
 
-  render();
+  grid.replaceChildren(...getPageItems(buildGalleryPage(GALLERY_SIZE, GALLERY_PER_PAGE, page), "lazy"));
+  updateControls();
 }
 
 function fallbackCopy(text) {
@@ -319,6 +494,34 @@ function setupMapLinks() {
   const links = buildExternalMapLinks("보타닉 웨딩파크");
   document.getElementById("kakao-link").href = links.kakao;
   document.getElementById("naver-link").href = links.naver;
+  document.getElementById("tmap-link").href = links.tmap;
+  const mobile = buildMobileMapLinks("보타닉 웨딩파크", {
+    userAgent: navigator.userAgent,
+    maxTouchPoints: navigator.maxTouchPoints,
+    pageUrl: window.location.href.split("#")[0],
+  });
+  if (!mobile) return;
+
+  const fallback = document.getElementById("map-fallback");
+  const message = document.getElementById("map-fallback-message");
+  const fallbackLink = document.getElementById("map-fallback-link");
+  const names = { kakao: "카카오맵", naver: "네이버지도", tmap: "TMAP" };
+  for (const [provider, link] of Object.entries(mobile)) {
+    const button = document.getElementById(`${provider}-link`);
+    button.href = link.app;
+    button.target = "_self";
+    button.addEventListener("click", (event) => {
+      if (event.defaultPrevented || event.button > 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      message.textContent = `${names[provider]} 앱이 열리지 않으면 아래 버튼을 이용해 주세요.`;
+      fallbackLink.href = link.fallback;
+      fallbackLink.textContent = link.fallbackLabel;
+      fallback.hidden = false;
+    });
+  }
+  // Installation cannot be detected reliably on the web. Android handles its
+  // intent fallback; other browsers get an explicit link, never a late redirect.
+  document.addEventListener("visibilitychange", () => { if (document.hidden) fallback.hidden = true; });
+  window.addEventListener("pagehide", () => { fallback.hidden = true; });
 }
 
 function setupDeveloperMode() {
