@@ -1,3 +1,11 @@
+@font-face {
+  font-family: "Invitation Map Labels";
+  src: url("./fonts/map-labels.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
+
 :root {
   color-scheme: light;
   --canvas: #ececeb;
@@ -202,6 +210,10 @@ a {
   background: linear-gradient(var(--line), transparent);
 }
 
+.invitation-title__normal {
+  display: none;
+}
+
 .section-rule--dark {
   background: linear-gradient(var(--muted), transparent);
 }
@@ -213,7 +225,9 @@ a {
   text-wrap: pretty;
 }
 
-.greeting--developer {
+.developer-status,
+.greeting--developer,
+.developer-calendar-year {
   display: none;
 }
 
@@ -245,19 +259,6 @@ a {
   font-family: Gulim, "굴림", sans-serif;
   font-size: 30px;
   letter-spacing: 0.03em;
-}
-
-.schedule__time {
-  margin-top: 10px;
-  color: #cfc4b2;
-  font-size: 16px;
-  letter-spacing: 0.06em;
-}
-
-.schedule__venue {
-  margin-top: 22px;
-  color: #e6ddca;
-  font-size: 17px;
 }
 
 .calendar-wrap {
@@ -477,18 +478,68 @@ a {
 }
 
 .map-frame {
-  height: 250px;
+  position: relative;
+  aspect-ratio: 1;
   margin-top: 26px;
   overflow: hidden;
   border: 1px solid var(--line);
+  background: #ffffff;
 }
 
-.media-placeholder--map {
-  background:
-    linear-gradient(rgba(244, 239, 231, 0.55), rgba(244, 239, 231, 0.55)),
-    repeating-linear-gradient(45deg, #d9cfb9 0 1px, transparent 1px 16px),
-    #e8e0d0;
-  color: #6f6558;
+.venue-map-canvas {
+  /* The SDK writes position:relative inline; retain the reserved frame size. */
+  position: absolute !important;
+  inset: 0;
+  opacity: 0;
+  color: #111111;
+  font-family: Gulim, "굴림", sans-serif;
+}
+
+.map-frame[hidden],
+.venue-map-canvas[hidden],
+.venue-map-status[hidden] {
+  display: none !important;
+}
+
+.map-frame[data-map-state="ready"] .venue-map-canvas {
+  opacity: 1;
+}
+
+.venue-marker {
+  position: relative;
+  width: 172px;
+  height: 50px;
+  padding: 9px 12px;
+  border-radius: 6px;
+  background: #111111;
+  color: #ffffff;
+  text-align: center;
+  font: 12px/1.4 Gulim, "굴림", sans-serif;
+  box-shadow: 0 2px 8px #0003;
+}
+
+.venue-marker strong { display: block; font-size: 14px; }
+.venue-marker span { color: #eeeeee; }
+.venue-marker::after {
+  position: absolute;
+  top: 100%;
+  left: calc(50% - 8px);
+  border: 8px solid transparent;
+  border-top: 10px solid #111111;
+  content: "";
+}
+
+.venue-map-status {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 24px;
+  color: #767676;
+  font-size: 13px;
+  line-height: 1.7;
+  text-align: center;
 }
 
 .map-actions {
@@ -529,6 +580,10 @@ a {
   flex: 1;
 }
 
+.map-button__icon--color {
+  display: none;
+}
+
 .map-fallback {
   margin-top: 10px;
   color: inherit;
@@ -552,30 +607,6 @@ a {
 .map-button--primary {
   background: var(--ink);
   color: var(--paper);
-}
-
-.transport {
-  display: flex;
-  flex-direction: column;
-  margin-top: 30px;
-  color: #4a423a;
-  font-size: 14px;
-  gap: 18px;
-  line-height: 1.75;
-  text-align: left;
-}
-
-.transport strong {
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-}
-
-.thanks__copy {
-  color: #a89a80;
-  font-size: 14px;
-  line-height: 2.05;
 }
 
 .account-actions {
@@ -602,6 +633,12 @@ a {
   border-color: var(--gold-strong);
   background: var(--gold-strong);
   color: var(--ink);
+}
+
+.account-button__normal,
+.account-button__chevron,
+.account-panel {
+  display: none;
 }
 
 .footer {
@@ -894,6 +931,7 @@ a {
 }
 
 .mode-toggle__developer,
+.mode-toggle-hint,
 .developer-command,
 .developer-rsvp,
 .developer-particle-layer {
@@ -1032,16 +1070,27 @@ a {
   border-radius: 50% 50% 0 0 / 26% 26% 0 0;
 }
 
-.invitation[data-mode="normal"] .cover__shade,
+.invitation[data-mode="normal"] .cover__shade {
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    transparent 40%,
+    rgba(0, 0, 0, 0.12) 52%,
+    rgba(0, 0, 0, 0.46) 70%,
+    rgba(0, 0, 0, 0.66) 100%
+  );
+}
+
 .invitation[data-mode="normal"] .cover__arrow,
 .invitation[data-mode="normal"] .petal-layer {
   display: none;
 }
 
 .invitation[data-mode="normal"] .cover__content {
-  position: relative;
-  padding: 30px 18px 48px;
-  color: var(--ink);
+  position: absolute;
+  padding: 0 18px 32px;
+  color: #ffffff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.24);
 }
 
 .invitation[data-mode="normal"] .cover__name {
@@ -1059,7 +1108,7 @@ a {
 
 .invitation[data-mode="normal"] .cover__ampersand,
 .invitation[data-mode="normal"] .cover__date {
-  color: var(--ink);
+  color: #ffffff;
 }
 
 .invitation[data-mode="normal"] .cover__date {
@@ -1067,13 +1116,47 @@ a {
   letter-spacing: 0.25em;
 }
 
-.invitation[data-mode="normal"] .footer__heading {
+.invitation[data-mode="normal"] .cover__meridiem {
+  letter-spacing: 0;
+}
+
+.invitation[data-mode="normal"] .cover__venue {
+  margin-top: 8px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  line-height: 1.7;
+}
+
+.invitation[data-mode="normal"] .footer__heading,
+.invitation[data-mode="developer"] .footer__heading {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 10px;
   min-height: 44px;
 }
-.invitation[data-mode="normal"] .footer__heading .mode-toggle {
+.invitation[data-mode="normal"] .mode-toggle-hint {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 5px;
+  max-width: 100%;
+  margin: 0;
+  color: #666666;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: 0;
+  text-align: left;
+  word-break: keep-all;
+}
+.mode-toggle-hint svg {
+  flex: 0 0 14px;
+  margin-top: 2px;
+}
+.invitation[data-mode="normal"] .footer__heading .mode-toggle,
+.invitation[data-mode="developer"] .footer__heading .mode-toggle {
   display: grid;
   place-items: center;
   width: auto;
@@ -1087,52 +1170,59 @@ a {
   backdrop-filter: none;
   transition: color 160ms ease, background-color 160ms ease;
 }
-.invitation[data-mode="normal"] .mode-toggle__normal {
+.invitation[data-mode="normal"] .mode-toggle__normal,
+.invitation[data-mode="developer"] .mode-toggle__developer {
   display: flex;
   height: 44px;
   align-items: center;
   justify-content: center;
   gap: 8px;
   padding: 0 18px;
-  border: 1px solid #bdbdbd;
+  border: 1px solid var(--mode-button-border, #bdbdbd);
   border-radius: 10px;
-  background: linear-gradient(180deg, #ffffff 0%, #f1f1f1 100%);
-  box-shadow: 0 3px 0 #d1d1d1, 0 5px 9px rgba(0, 0, 0, 0.09);
+  background: var(--mode-button-background, linear-gradient(180deg, #ffffff 0%, #f1f1f1 100%));
+  box-shadow: var(--mode-button-shadow, 0 3px 0 #d1d1d1, 0 5px 9px rgba(0, 0, 0, 0.09));
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
   transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
-.invitation[data-mode="normal"] .mode-toggle__normal svg {
+.invitation[data-mode="normal"] .mode-toggle__normal svg,
+.invitation[data-mode="developer"] .mode-toggle__developer svg {
   stroke-width: 1.7;
 }
 @media (hover: hover) {
-  .invitation[data-mode="normal"] .footer__heading .mode-toggle:hover .mode-toggle__normal {
-    border-color: #888888;
-    box-shadow: 0 4px 0 #c8c8c8, 0 7px 12px rgba(0, 0, 0, 0.12);
+  .invitation[data-mode="normal"] .footer__heading .mode-toggle:hover .mode-toggle__normal,
+  .invitation[data-mode="developer"] .footer__heading .mode-toggle:hover .mode-toggle__developer {
+    border-color: var(--mode-button-hover-border, #888888);
+    box-shadow: var(--mode-button-hover-shadow, 0 4px 0 #c8c8c8, 0 7px 12px rgba(0, 0, 0, 0.12));
     transform: translateY(-1px);
   }
 }
-.invitation[data-mode="normal"] .footer__heading .mode-toggle:active .mode-toggle__normal {
-  border-color: #999999;
-  box-shadow: 0 1px 0 #c8c8c8, inset 0 1px 3px rgba(0, 0, 0, 0.08);
+.invitation[data-mode="normal"] .footer__heading .mode-toggle:active .mode-toggle__normal,
+.invitation[data-mode="developer"] .footer__heading .mode-toggle:active .mode-toggle__developer {
+  border-color: var(--mode-button-active-border, #999999);
+  box-shadow: var(--mode-button-active-shadow, 0 1px 0 #c8c8c8, inset 0 1px 3px rgba(0, 0, 0, 0.08));
   transform: translateY(2px);
 }
-.invitation[data-mode="normal"] .footer__heading .mode-toggle:focus-visible {
-  outline: 2px solid #747474;
+.invitation[data-mode="normal"] .footer__heading .mode-toggle:focus-visible,
+.invitation[data-mode="developer"] .footer__heading .mode-toggle:focus-visible {
+  outline: 2px solid var(--mode-button-focus, #747474);
   outline-offset: 2px;
 }
 @media (prefers-reduced-motion: reduce) {
   .invitation[data-mode="normal"] .footer__heading .mode-toggle,
-  .invitation[data-mode="normal"] .mode-toggle__normal {
+  .invitation[data-mode="normal"] .mode-toggle__normal,
+  .invitation[data-mode="developer"] .footer__heading .mode-toggle,
+  .invitation[data-mode="developer"] .mode-toggle__developer {
     transition: none;
   }
 }
 
 .invitation[data-mode="normal"] .section {
-  padding: 68px 40px;
-  border-top: 1px solid var(--line);
+  padding: 40px;
+  border-top: 0;
   background: var(--paper);
   color: var(--text);
 }
@@ -1143,17 +1233,51 @@ a {
 }
 
 .invitation[data-mode="normal"] .section-kicker {
+  margin-bottom: 28px;
   color: var(--ink);
   font-style: normal;
   font-weight: 600;
 }
 
-.invitation[data-mode="normal"] .section-rule,
-.invitation[data-mode="normal"] .section-rule--dark {
-  width: 34px;
-  height: 1px;
-  margin: 20px auto 30px;
-  background: var(--ink);
+.invitation[data-mode="normal"] .invitation-title__normal {
+  display: block;
+}
+
+.invitation[data-mode="normal"] #invitation-title {
+  margin-bottom: 8px;
+}
+
+.invitation[data-mode="normal"] .invitation-rings {
+  display: block;
+  width: 50px;
+  height: 50px;
+  margin: 0 auto;
+  object-fit: contain;
+}
+
+.invitation[data-mode="normal"] .invitation-title__developer,
+.invitation[data-mode="normal"] .section-rule {
+  display: none;
+}
+
+.invitation[data-mode="normal"] .invitation-copy {
+  padding-top: 50px;
+}
+
+.invitation[data-mode="normal"] #schedule-title,
+.invitation[data-mode="normal"] #thanks-title {
+  letter-spacing: 0.04em;
+  line-height: 1.7;
+  text-wrap: balance;
+}
+
+.invitation[data-mode="normal"] #schedule-title {
+  margin-bottom: 12px;
+}
+
+.invitation[data-mode="normal"] #location-title {
+  margin-bottom: 18px;
+  letter-spacing: 0.04em;
 }
 
 .invitation[data-mode="normal"] .family {
@@ -1168,22 +1292,33 @@ a {
   color: var(--text);
 }
 
-.invitation[data-mode="normal"] .schedule__date,
-.invitation[data-mode="normal"] .schedule__time,
-.invitation[data-mode="normal"] .schedule__venue,
-.invitation[data-mode="normal"] .calendar,
-.invitation[data-mode="normal"] .dday-copy,
-.invitation[data-mode="normal"] .thanks__copy {
+.invitation[data-mode="normal"] .calendar {
   color: var(--text);
 }
 
+.invitation[data-mode="normal"] .dday-copy,
+.invitation[data-mode="normal"] .dday-copy strong {
+  color: #767676;
+  font-size: 13px;
+}
+
 .invitation[data-mode="normal"] .schedule__date {
-  font-family: Georgia, "Times New Roman", serif;
+  color: #767676;
+  font-family: Gulim, "굴림", sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.8;
 }
 
 .invitation[data-mode="normal"] .calendar-wrap,
 .invitation[data-mode="normal"] .dday-copy {
   border-color: var(--line);
+}
+
+.invitation[data-mode="normal"] .calendar-wrap {
+  margin-top: 20px;
+  padding-top: 20px;
 }
 
 .invitation[data-mode="normal"] .calendar__month,
@@ -1223,45 +1358,240 @@ a {
 }
 
 .invitation[data-mode="normal"] .map-frame {
-  border-color: var(--ink);
+  border-color: var(--line);
 }
 
-.invitation[data-mode="normal"] .media-placeholder--map {
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.72)),
-    repeating-linear-gradient(45deg, #d7d7d7 0 1px, transparent 1px 16px),
-    #f2f2f2;
-  color: var(--text);
-}
-
-.invitation[data-mode="normal"] .map-button,
 .invitation[data-mode="normal"] .account-button {
   border-color: var(--ink);
   background: var(--paper);
   color: var(--ink);
 }
 
-.invitation[data-mode="normal"] .map-button {
-  border-radius: 10px;
+.invitation[data-mode="normal"] .map-actions,
+.invitation[data-mode="developer"] .map-actions {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 0;
+  gap: 0;
+  border: 1px solid var(--line);
+  border-top: 0;
 }
 
-.invitation[data-mode="normal"] .map-button--primary,
+.invitation[data-mode="normal"] .map-button,
+.invitation[data-mode="developer"] .map-button {
+  justify-content: center;
+  min-height: 44px;
+  height: 44px;
+  gap: 4px;
+  padding: 0 4px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-radius: 0;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  transition: background-color 150ms ease;
+}
+
+.invitation[data-mode="normal"] .map-button {
+  background: var(--paper);
+  color: #333029;
+  font-family: "Invitation Map Labels", Batang, "바탕", Georgia, serif;
+}
+
+.invitation[data-mode="normal"] .map-button:last-child,
+.invitation[data-mode="developer"] .map-button:last-child {
+  border-right: 0;
+}
+
+.invitation[data-mode="normal"] .map-button:hover,
+.invitation[data-mode="normal"] .map-button:active {
+  background: #f5f5f5;
+}
+
+.invitation[data-mode="normal"] .map-button:focus-visible,
+.invitation[data-mode="developer"] .map-button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: -3px;
+}
+
+.invitation[data-mode="normal"] .map-button__icon {
+  display: none;
+}
+
+.invitation[data-mode="normal"] .map-button__icon--color {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 0;
+  background: transparent;
+}
+
+.invitation[data-mode="normal"] #tmap-link .map-button__icon--color {
+  width: 14px;
+  height: 14px;
+}
+
+.invitation[data-mode="normal"] .map-button__label,
+.invitation[data-mode="developer"] .map-button__label {
+  flex: 0 1 auto;
+}
+
 .invitation[data-mode="normal"] .account-button--accent {
   background: var(--ink);
   color: var(--paper);
 }
 
-.invitation[data-mode="normal"] .transport,
 .invitation[data-mode="normal"] .location__address {
   color: var(--text);
 }
 
-.invitation[data-mode="normal"] .transport strong {
-  color: var(--muted);
+.invitation[data-mode="normal"] .location__venue,
+.invitation[data-mode="normal"] .location__address,
+.invitation[data-mode="normal"] .account-button {
+  font-size: 13px;
+}
+
+.invitation:is([data-mode="normal"], [data-mode="developer"]) .account-actions {
+  gap: 12px;
+}
+
+.invitation:is([data-mode="normal"], [data-mode="developer"]) .account-group {
+  overflow: hidden;
+  border: 1px solid #e3e3e3;
+  border-radius: 8px;
+  background: var(--paper);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 5%), 0 2px 8px rgb(0 0 0 / 3%);
+}
+
+.invitation:is([data-mode="normal"], [data-mode="developer"]) .account-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 52px;
+  padding: 16px 24px;
+  border: 0;
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--text);
+  line-height: 20px;
+  text-align: left;
+}
+
+.invitation:is([data-mode="normal"], [data-mode="developer"]) .account-button__normal,
+.invitation:is([data-mode="normal"], [data-mode="developer"]) .account-button__chevron {
+  display: block;
+}
+
+.invitation:is([data-mode="normal"], [data-mode="developer"]) .account-button__chevron {
+  opacity: 0.45;
+  transition: transform 300ms ease;
+}
+
+.invitation:is([data-mode="normal"], [data-mode="developer"]) .account-button[aria-expanded="true"] .account-button__chevron {
+  transform: rotate(180deg);
+}
+
+.invitation:is([data-mode="normal"], [data-mode="developer"]) .account-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  visibility: hidden;
+  transition: grid-template-rows 300ms ease, visibility 300ms;
+}
+
+.invitation:is([data-mode="normal"], [data-mode="developer"]) .account-panel.is-open {
+  grid-template-rows: 1fr;
+  visibility: visible;
+}
+
+.invitation:is([data-mode="normal"], [data-mode="developer"]) .account-panel__inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.invitation:is([data-mode="normal"], [data-mode="developer"]) .account-panel__list {
+  padding: 0 24px 16px;
+}
+
+.invitation:is([data-mode="normal"], [data-mode="developer"]) .account-panel .account-row {
+  padding: 16px 0;
+  border: 0;
+  border-top: 1px solid #eeeeee;
+  background: transparent;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.invitation:is([data-mode="normal"], [data-mode="developer"]) .account-panel .account-row:last-child {
+  border-bottom: 1px solid #eeeeee;
+}
+
+.invitation:is([data-mode="normal"], [data-mode="developer"]) .account-panel .account-row__role {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.invitation:is([data-mode="normal"], [data-mode="developer"]) .account-row__bank {
+  margin-top: 4px;
+  color: #767676;
+  font-size: 12px;
+}
+
+.invitation:is([data-mode="normal"], [data-mode="developer"]) .account-panel .account-row__content {
+  justify-content: flex-start;
+  margin-top: 0;
+  gap: 2px;
+}
+
+.invitation:is([data-mode="normal"], [data-mode="developer"]) .account-panel .account-row__number {
+  font-size: 13px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.invitation:is([data-mode="normal"], [data-mode="developer"]) .account-panel .account-row__copy {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+}
+
+.invitation:is([data-mode="normal"], [data-mode="developer"]) .account-row__copy img {
+  opacity: 0.6;
+}
+
+.invitation:is([data-mode="normal"], [data-mode="developer"]) .account-button:focus-visible,
+.invitation:is([data-mode="normal"], [data-mode="developer"]) .account-row__copy:focus-visible {
+  outline: 2px solid #747474;
+  outline-offset: -3px;
+}
+
+@media (hover: hover) {
+  .invitation[data-mode="normal"] .account-button:hover,
+  .invitation[data-mode="normal"] .account-row__copy:hover {
+    background: #f7f7f7;
+  }
+}
+
+.invitation[data-mode="normal"] .thanks {
+  padding-bottom: 20px;
 }
 
 .invitation[data-mode="normal"] .footer {
-  border-top: 1px solid var(--line);
+  padding-top: 10px;
+  border-top: 0;
   background: var(--paper);
 }
 
@@ -1318,14 +1648,19 @@ body.is-developer-mode .petal-layer {
   display: none;
 }
 
-.invitation[data-mode="developer"] .mode-toggle__developer {
-  display: inline;
+.invitation[data-mode="developer"] .footer__heading {
+  --mode-button-border: #315b40;
+  --mode-button-background: linear-gradient(180deg, #10291a 0%, #07110c 100%);
+  --mode-button-shadow: 0 3px 0 #163421, 0 5px 9px rgba(0, 0, 0, 0.25);
+  --mode-button-hover-border: var(--terminal-green);
+  --mode-button-hover-shadow: 0 4px 0 #21492e, 0 7px 12px rgba(0, 0, 0, 0.3);
+  --mode-button-active-border: #65be79;
+  --mode-button-active-shadow: 0 1px 0 #21492e, inset 0 1px 3px rgba(0, 0, 0, 0.25);
+  --mode-button-focus: var(--terminal-green);
+  margin-top: 24px;
 }
 
-.invitation[data-mode="developer"] .mode-toggle {
-  margin: 24px auto 0;
-  border-color: #315b40;
-  background: rgba(7, 17, 12, 0.88);
+.invitation[data-mode="developer"] .footer__heading .mode-toggle {
   color: var(--terminal-green);
   font-family: inherit;
 }
@@ -1334,9 +1669,22 @@ body.is-developer-mode .petal-layer {
   display: none;
 }
 
-.invitation[data-mode="developer"] > .invitation-copy {
-  padding-top: 96px;
+.invitation[data-mode="developer"] > .section.invitation-copy {
+  padding-top: 24px;
   border-top: 0;
+}
+
+.invitation[data-mode="developer"] .developer-status {
+  display: block;
+  padding: 32px 22px 0;
+  color: var(--terminal-text);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.invitation[data-mode="developer"] .developer-status span {
+  color: var(--terminal-green);
 }
 
 .developer-log-line {
@@ -1391,8 +1739,8 @@ body.is-developer-mode .petal-layer {
 }
 
 .invitation[data-mode="developer"] .section {
-  padding: 64px 26px;
-  border-top: 1px dashed var(--terminal-line);
+  padding: 40px 22px;
+  border-top: 0;
   background: var(--terminal-bg);
   color: var(--terminal-text);
   text-align: left;
@@ -1430,25 +1778,25 @@ body.is-developer-mode .petal-layer {
 }
 
 .invitation[data-mode="developer"] .section-kicker {
+  margin: 8px 0 20px;
   color: var(--terminal-blue);
   font-family: inherit;
-  font-size: 18px;
+  font-size: 14px;
   font-style: normal;
+  font-weight: 600;
+  line-height: 1.7;
   letter-spacing: 0;
   text-align: left;
 }
 
 .invitation[data-mode="developer"] .section-rule {
-  width: 100%;
-  height: 1px;
-  margin: 14px 0 30px;
-  background: var(--terminal-line);
+  display: none;
 }
 
 .invitation[data-mode="developer"] .greeting {
   color: var(--terminal-text);
-  font-size: 14px;
-  line-height: 2.1;
+  font-size: 13px;
+  line-height: 1.9;
   text-align: left;
 }
 
@@ -1460,6 +1808,17 @@ body.is-developer-mode .petal-layer {
   display: block;
 }
 
+.invitation[data-mode="developer"] #invitation-title {
+  margin: 8px 0 20px;
+}
+
+.invitation[data-mode="developer"] .invitation-rings {
+  display: block;
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+}
+
 .invitation[data-mode="developer"] .developer-term {
   color: var(--terminal-blue);
   font-weight: 600;
@@ -1467,21 +1826,18 @@ body.is-developer-mode .petal-layer {
 }
 
 .invitation[data-mode="developer"] .family {
-  margin-top: 34px;
-  border: 1px solid var(--terminal-line);
-  background: var(--terminal-panel);
-  color: var(--terminal-dim);
+  margin-top: 28px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--terminal-text);
   font-family: inherit;
   font-size: 13px;
   text-align: left;
 }
 
-.invitation[data-mode="developer"] .family::before {
-  display: block;
-  margin-bottom: 8px;
-  color: var(--terminal-green);
-  content: "INFO FamilyContext : parents loaded";
-  font-size: 11px;
+.invitation[data-mode="developer"] .family span {
+  color: var(--terminal-dim);
 }
 
 .invitation[data-mode="developer"] .family strong {
@@ -1489,30 +1845,43 @@ body.is-developer-mode .petal-layer {
 }
 
 .invitation[data-mode="developer"] .schedule__date,
-.invitation[data-mode="developer"] .schedule__time,
-.invitation[data-mode="developer"] .schedule__venue,
 .invitation[data-mode="developer"] .location__venue,
-.invitation[data-mode="developer"] .location__address,
-.invitation[data-mode="developer"] .thanks__copy {
+.invitation[data-mode="developer"] .location__address {
   color: var(--terminal-text);
   font-family: inherit;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.8;
+  letter-spacing: 0;
   text-align: left;
 }
 
 .invitation[data-mode="developer"] .schedule__date {
-  color: var(--terminal-green);
-  font-size: 22px;
+  color: var(--terminal-dim);
+}
+
+.invitation[data-mode="developer"] #schedule-title {
+  margin-bottom: 12px;
 }
 
 .invitation[data-mode="developer"] .calendar-wrap {
-  border-color: var(--terminal-line);
+  margin-top: 20px;
+  padding-top: 20px;
+  border: 0;
 }
 
 .invitation[data-mode="developer"] .calendar__month {
-  color: var(--terminal-blue);
+  color: var(--terminal-text);
   font-family: inherit;
+  font-size: 14px;
   font-style: normal;
-  text-align: left;
+  letter-spacing: 0;
+  text-transform: none;
+  text-align: center;
+}
+
+.invitation[data-mode="developer"] .developer-calendar-year {
+  display: inline;
 }
 
 .invitation[data-mode="developer"] .calendar {
@@ -1525,20 +1894,22 @@ body.is-developer-mode .petal-layer {
 
 .invitation[data-mode="developer"] .calendar__wedding-day {
   border: 1px solid var(--terminal-green);
-  background: rgba(126, 231, 135, 0.12);
+  background: transparent;
   color: var(--terminal-green);
 }
 
 .invitation[data-mode="developer"] .dday-copy {
   border-color: var(--terminal-line);
-  color: var(--terminal-text);
+  color: var(--terminal-dim);
   font-family: inherit;
-  font-style: normal;
+  font-size: 13px;
+  font-style: italic;
+  letter-spacing: 0;
   text-align: left;
 }
 
 .invitation[data-mode="developer"] .dday-copy strong {
-  color: var(--terminal-green);
+  color: inherit;
 }
 
 .invitation[data-mode="developer"] .gallery-grid {
@@ -1575,43 +1946,129 @@ body.is-developer-mode .petal-layer {
   font-family: inherit;
 }
 
-.invitation[data-mode="developer"] .map-frame {
-  border-color: var(--terminal-line);
-}
-
-.invitation[data-mode="developer"] .media-placeholder--map {
-  background:
-    linear-gradient(rgba(3, 9, 6, 0.86), rgba(3, 9, 6, 0.86)),
-    repeating-linear-gradient(45deg, #315b40 0 1px, transparent 1px 16px),
-    var(--terminal-panel);
-  color: var(--terminal-green);
-}
-
-.invitation[data-mode="developer"] .map-button,
-.invitation[data-mode="developer"] .account-button {
-  border-color: var(--terminal-green);
+.invitation[data-mode="developer"] .location-map {
+  margin-top: 20px;
+  overflow: hidden;
+  border: 1px solid var(--terminal-line);
   border-radius: 4px;
+}
+
+.invitation[data-mode="developer"] .map-frame {
+  margin-top: 0;
+  border: 0;
+  border-bottom: 1px solid var(--terminal-line);
+}
+
+.invitation[data-mode="developer"] .map-actions {
+  border: 0;
+}
+
+.invitation[data-mode="developer"] .map-button {
+  border-color: var(--terminal-line);
   background: transparent;
   color: var(--terminal-green);
   font-family: inherit;
 }
 
-.invitation[data-mode="developer"] .map-button--primary,
-.invitation[data-mode="developer"] .account-button--accent {
+.invitation[data-mode="developer"] .map-button:hover,
+.invitation[data-mode="developer"] .map-button:active {
   background: #11351d;
 }
 
-.invitation[data-mode="developer"] .transport {
+.invitation[data-mode="developer"] .map-button__icon {
+  display: none;
+}
+
+.invitation[data-mode="developer"] .map-button__icon--color {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 0;
+  background: transparent;
+}
+
+.invitation[data-mode="developer"] #tmap-link .map-button__icon {
+  width: 14px;
+  height: 14px;
+}
+
+.invitation[data-mode="developer"] .account-button {
+  padding: 16px 18px;
+  background: transparent;
   color: var(--terminal-text);
   font-family: inherit;
+  font-size: 13px;
+  letter-spacing: 0;
+}
+
+.invitation[data-mode="developer"] .account-group {
+  border-color: var(--terminal-line);
+  border-radius: 4px;
+  background: var(--terminal-panel);
+  box-shadow: none;
+}
+
+.invitation[data-mode="developer"] .account-actions {
+  margin-top: 0;
+}
+
+.invitation[data-mode="developer"] .account-panel__list {
+  padding: 0 18px 8px;
+}
+
+.invitation[data-mode="developer"] .account-panel .account-row {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: center;
+  column-gap: 8px;
+  padding: 10px 0;
+  border-color: var(--terminal-line);
+  background: transparent;
+}
+
+.invitation[data-mode="developer"] .account-panel .account-row:last-child {
+  border-bottom: 0;
+}
+
+.invitation[data-mode="developer"] .account-panel .account-row__role {
+  grid-column: 1 / -1;
+  color: var(--terminal-text);
+}
+
+.invitation[data-mode="developer"] .account-row__bank {
+  margin-top: 0;
+  color: var(--terminal-dim);
+}
+
+.invitation[data-mode="developer"] .account-panel .account-row__number {
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.invitation[data-mode="developer"] .account-panel .account-row__content {
+  min-width: 0;
+  justify-content: space-between;
+}
+
+.invitation[data-mode="developer"] .account-button__chevron,
+.invitation[data-mode="developer"] .account-row__copy img {
+  filter: invert(1);
+  opacity: 0.8;
+}
+
+.invitation[data-mode="developer"] .account-button:focus-visible,
+.invitation[data-mode="developer"] .account-row__copy:focus-visible {
+  outline-color: var(--terminal-green);
+}
+
+.invitation[data-mode="developer"] .account-button:hover,
+.invitation[data-mode="developer"] .account-row__copy:hover {
+  background: #11351d;
 }
 
 .invitation[data-mode="developer"] .map-note {
   color: var(--terminal-dim);
-}
-
-.invitation[data-mode="developer"] .transport strong {
-  color: var(--terminal-blue);
 }
 
 .invitation[data-mode="developer"] .developer-rsvp {
