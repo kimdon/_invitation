@@ -81,7 +81,7 @@ test("buildExternalMapLinks creates Kakao, Naver and TMAP searches for the venue
   );
 });
 
-test("map buttons use flat black symbols on white SVG backgrounds before readable labels", async () => {
+test("map buttons retain developer icons and use local color icons in normal mode", async () => {
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
   const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
   const iconStyle = css.match(/\.map-button__icon\s*\{([^}]*)\}/)?.[1] ?? "";
@@ -90,6 +90,11 @@ test("map buttons use flat black symbols on white SVG backgrounds before readabl
   for (const provider of ["kakao", "naver", "tmap"]) {
     const button = html.match(new RegExp(`<a\\b[^>]*id="${provider}-link"[^>]*>([\\s\\S]*?)<\\/a>`))?.[1] ?? "";
     assert.match(button, new RegExp(`<img[^>]*class="map-button__icon"[^>]*src="\\./images/map-icons/${provider}\\.svg"[^>]*alt=""`));
+    assert.match(button, new RegExp(`<img[^>]*class="map-button__icon map-button__icon--color"[^>]*src="\\./images/map-icons/${provider}-color\\.png"[^>]*alt=""`));
+    const colorAsset = new URL(`../images/map-icons/${provider}-color.png`, import.meta.url);
+    const colorMetadata = await sharp(fileURLToPath(colorAsset)).metadata();
+    assert.equal(colorMetadata.format, "png");
+    assert.ok(colorMetadata.width >= 32 && colorMetadata.height >= 32);
     assert.match(button, /<span class="map-button__label">[^<]+<\/span>/);
     assert.ok(button.indexOf("<img") < button.indexOf("<span"));
     const asset = new URL(`../images/map-icons/${provider}.svg`, import.meta.url);
@@ -109,6 +114,8 @@ test("map buttons use flat black symbols on white SVG backgrounds before readabl
 test("gallery sources include every optimized photo exactly once", async () => {
   assert.ok(GALLERY_PHOTOS.length > 0);
   assert.equal(new Set(GALLERY_PHOTOS).size, GALLERY_PHOTOS.length);
+  const numbers = GALLERY_PHOTOS.map((path) => Number(path.match(/\/IMG_(\d+)\.JPG$/)[1]));
+  assert.deepEqual(numbers, [...numbers].sort((a, b) => a - b), "gallery photos stay in ascending IMG number order");
   for (const [variant, directory] of [["thumbnail", "thumbnails"], ["full", "full"]]) {
     const files = await readdir(new URL(`../images/gallery/optimized/${directory}/`, import.meta.url));
     const paths = files.filter((name) => name.endsWith(".webp"))
@@ -116,6 +123,47 @@ test("gallery sources include every optimized photo exactly once", async () => {
     const listed = GALLERY_PHOTOS.map((_, index) => getGallerySources(index + 1)[variant]).sort();
     assert.deepEqual(listed, paths);
   }
+});
+
+test("the existing developer button has a normal-mode-only explanation", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
+  const footer = html.match(/<footer\b[\s\S]*?<\/footer>/)?.[0] ?? "";
+  assert.match(footer, /<span>develop mode<\/span>/);
+  assert.match(footer, /<button[^>]*id="developer-toggle"[^>]*aria-describedby="developer-mode-hint"/);
+  assert.match(footer, /<p class="mode-toggle-hint" id="developer-mode-hint">[\s\S]*?누르면 개발자 버전으로 전환됩니다\.[\s\S]*?<\/p>\s*<\/div>/);
+  assert.ok(footer.indexOf('class="mode-toggle-hint"') > footer.indexOf("</button>"));
+  assert.match(css, /\.mode-toggle-hint[^{}]*\{\s*display:\s*none;/);
+  assert.match(css, /\.invitation\[data-mode="normal"\] \.mode-toggle-hint\s*\{\s*display:\s*flex;/);
+});
+
+test("both mode switches share a raised icon button with the same dimensions", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
+  const returnButton = html.match(/<span class="mode-toggle__developer">([\s\S]*?)<\/button>/)?.[1] ?? "";
+  assert.match(returnButton, /<svg[^>]*aria-hidden="true"[^>]*width="20"[^>]*height="20"/);
+  assert.match(returnButton, /<span>일반 모드로<\/span>/);
+  const sharedFace = css.match(/\.invitation\[data-mode="normal"\] \.mode-toggle__normal,\s*\.invitation\[data-mode="developer"\] \.mode-toggle__developer\s*\{([^}]*)\}/)?.[1] ?? "";
+  assert.match(sharedFace, /display:\s*flex/);
+  assert.match(sharedFace, /height:\s*44px/);
+  assert.match(sharedFace, /gap:\s*8px/);
+  assert.match(sharedFace, /padding:\s*0 18px/);
+  assert.match(sharedFace, /border-radius:\s*10px/);
+  assert.match(sharedFace, /font-size:\s*13px/);
+  assert.match(sharedFace, /box-shadow:/);
+});
+
+test("location starts with an empty-map message inside the visible frame without requesting a static map", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  const frame = html.match(/<div[^>]*id="venue-map-frame"[^>]*>[\s\S]*?\n        <\/div>/)?.[0];
+  assert.ok(frame);
+  assert.doesNotMatch(frame.split(">", 1)[0], /\bhidden\b/);
+  assert.match(frame, /id="venue-map-status"[^>]*>약도가 없습니다<\/p>/);
+  assert.match(frame, /id="venue-map"[^>]*hidden/);
+  assert.doesNotMatch(html, /venue-map\.png|venue-map-fallback|약도와 지도 자리표시자/);
+  const metadata = await sharp(fileURLToPath(new URL("../images/venue-map.png", import.meta.url))).metadata();
+  assert.equal(metadata.width, 1280);
+  assert.equal(metadata.height, 1276);
 });
 
 test("optimized gallery assets preserve photo shape with bounded dimensions and sizes", async () => {
@@ -164,7 +212,7 @@ test("getAccountGroup returns the requested three account holders", async () => 
   ]);
 });
 
-test("the page exposes map buttons without loading map SDKs", async () => {
+test("the page keeps external directions buttons alongside the lazy Naver map", async () => {
   const [html, app, logic, css] = await Promise.all([
     readFile(new URL("../index.html", import.meta.url), "utf8"),
     readFile(new URL("../src/app.js", import.meta.url), "utf8"),
@@ -180,8 +228,9 @@ test("the page exposes map buttons without loading map SDKs", async () => {
   assert.match(app, /buildExternalMapLinks\("보타닉 웨딩파크"\)/);
   assert.doesNotMatch(source, /%20%EC%98%A4%ED%82%A4%EB%93%9C%ED%99%80/);
   assert.doesNotMatch(source, /dapi\.kakao\.com/);
-  assert.doesNotMatch(source, /oapi\.map\.naver\.com/);
-  assert.doesNotMatch(source, /kakaoJavaScriptKey|naverNcpKeyId|loadScript/);
+  assert.match(html, /id="venue-map"/);
+  assert.match(app, /setupVenueMap\(\)/);
+  assert.doesNotMatch(html, /<script[^>]+oapi\.map\.naver\.com/);
   assert.match(css, /\.gallery-dot\s*\{/);
   assert.match(css, /\.gallery-dot\.is-active\s*\{/);
 });
@@ -194,12 +243,31 @@ test("the page uses the requested bride and groom names everywhere", async () =>
   assert.match(html, /김창희 · 김경자 <span>의 아들<\/span> <strong>김병관<\/strong>/);
   assert.match(html, /김천호 · 김민주 <span>의 딸<\/span> <strong>김도은<\/strong>/);
   assert.match(html, /2026년 11월 21일 토요일 오후 1시 50분/);
-  assert.match(html, /서울 강서구 보타닉 웨딩파크/);
+  const coverDate = html.match(/<p class="cover__date">([\s\S]*?)<\/p>/)?.[1];
+  assert.equal(coverDate?.replace(/<[^>]+>/g, ""), "2026.11.21 pm 01:50");
+  assert.match(html, /class="cover__venue">보타닉웨딩파크 오키드홀<\/p>/);
+  assert.doesNotMatch(html, /class="schedule__venue"/);
+  assert.match(html, /class="location__venue">보타닉 웨딩파크 오키드홀<\/p>/);
+  assert.match(html, /id="thanks-title">마음 전하실 곳<\/h2>/);
   assert.match(html, /서울특별시 강서구 마곡중앙5로 6/);
   assert.match(html, /data-account-side="groom"/);
   assert.match(html, /data-account-side="bride"/);
   assert.doesNotMatch(html, /홍길동|김가나|길동|가나/);
-  assert.doesNotMatch(html, /홍판서|춘섬|김진사|이씨|보타닉웨딩홀|오키드홀/);
+  assert.doesNotMatch(html, /홍판서|춘섬|김진사|이씨|보타닉웨딩홀/);
+});
+
+test("normal invitation shows wedding rings and the requested message", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  const heading = html.match(/<h2[^>]*id="invitation-title"[^>]*>([\s\S]*?)<\/h2>/)?.[1];
+  assert.match(heading, /src="\.\/images\/wedding-rings\.webp"/);
+  assert.doesNotMatch(heading, /STORY/);
+  const copy = html.match(/<p class="greeting greeting--normal">([\s\S]*?)<\/p>/)?.[1];
+  assert.equal(copy?.replace(/<br\s*\/?\s*>/g, " ").replace(/\s+/g, " ").trim(),
+    "서로 다른 두길을 걸어온 저희가 이제 하나의 길을 함께 걸어가려 합니다. 바쁘시더라도 오셔서 축복해 주시면 더없는 기쁨으로 간직하겠습니다.");
+  const asset = await sharp(fileURLToPath(new URL("../images/wedding-rings.webp", import.meta.url))).metadata();
+  assert.equal(asset.format, "webp");
+  assert.equal(asset.width, 264);
+  assert.equal(asset.height, 264);
 });
 
 test("the page uses the editorial invitation structure", async () => {
@@ -209,7 +277,8 @@ test("the page uses the editorial invitation structure", async () => {
   assert.match(html, /Kim Byung-kwan/);
   assert.match(html, /Do-eun/);
   assert.match(html, /class="section section--dark schedule-calendar/);
-  assert.match(html, /id="account-dialog"/);
+  assert.match(html, /id="groom-accounts-panel"/);
+  assert.doesNotMatch(html, /id="account-dialog"/);
   assert.match(html, /id="photo-viewer"/);
   assert.match(html, /id="copy-toast"/);
   assert.match(html, /서울특별시 강서구 마곡중앙5로 6/);
@@ -244,7 +313,8 @@ test("the stylesheet defines the approved pure-white normal mode", async () => {
   assert.match(css, /\.invitation\[data-mode="normal"\] \.section--dark\s*\{[^}]*background:\s*var\(--paper\)/s);
   assert.match(css, /\.invitation\[data-mode="normal"\] \.gallery-item\s*\{[^}]*border:\s*1px solid var\(--ink\)/s);
   assert.match(css, /\.invitation\[data-mode="normal"\] \.calendar__wedding-day\s*\{[^}]*border-radius:\s*50%[^}]*background:\s*var\(--ink\)[^}]*color:\s*var\(--paper\)/s);
-  assert.match(css, /\.invitation\[data-mode="normal"\] \.map-button\s*\{[^}]*border-radius:\s*10px/s);
+  assert.match(css, /\.invitation\[data-mode="normal"\] \.map-button,\s*\.invitation\[data-mode="developer"\] \.map-button\s*\{[^}]*height:\s*44px[^}]*gap:\s*4px[^}]*border-radius:\s*0/s);
+  assert.match(css, /\.invitation\[data-mode="normal"\] \.map-button\s*\{[^}]*font-family:\s*"Invitation Map Labels"/s);
   assert.match(css, /\.invitation\[data-mode="developer"\] \.section\s*\{/);
   assert.match(css, /\.photo-viewer__content\s*\{[^}]*touch-action:\s*none/s);
   assert.match(css, /@media\s*\(prefers-reduced-motion:\s*reduce\)/);
@@ -305,9 +375,9 @@ test("normal mode omits the groom family name while developer branding keeps it"
   assert.doesNotMatch(html, /Byeong-gwan/);
   assert.match(html, /class="greeting greeting--normal"/);
   assert.match(html, /class="greeting greeting--developer"/);
-  for (const term of ["branch", "commit", "conflict", "merge", "approve"]) {
-    assert.match(html, new RegExp(term));
-  }
+  assert.match(html, /class="developer-status"[^>]*>[\s\S]*?\[INFO\][\s\S]*?develop mode<\/h1>/);
+  assert.match(html, /data-console-section="\/\/ invitation"/);
+  assert.doesNotMatch(html, /class="developer-story-log"/);
 });
 
 test("developer invitation terms use developer-mode-only highlight markup", async () => {
@@ -315,7 +385,7 @@ test("developer invitation terms use developer-mode-only highlight markup", asyn
     readFile(new URL("../index.html", import.meta.url), "utf8"),
     readFile(new URL("../styles.css", import.meta.url), "utf8"),
   ]);
-  const highlightedTerms = ["branch", "commit", "conflict", "resolve", "main branch", "merge", "approve"];
+  const highlightedTerms = ["branch", "commit", "conflict", "resolve", "main branch", "merge", "release", "approve"];
 
   for (const term of highlightedTerms) {
     assert.match(html, new RegExp(`<span class="developer-term">${term}</span>`));
@@ -329,6 +399,8 @@ test("developer invitation terms use developer-mode-only highlight markup", asyn
   assert.match(termRule, /color:\s*var\(--terminal-blue\)/);
   assert.match(termRule, /font-weight:\s*600/);
   assert.doesNotMatch(termRule, /text-decoration/);
+  assert.match(css, /\.invitation\[data-mode="developer"\] \.greeting--normal\s*\{\s*display:\s*none/);
+  assert.match(css, /\.invitation\[data-mode="developer"\] \.greeting--developer\s*\{\s*display:\s*block/);
 });
 
 test("git switching and wedding boot share one terminal before Invitation is revealed", async () => {

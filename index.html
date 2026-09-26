@@ -45,31 +45,38 @@
             <span aria-hidden="true">PHOTO</span>
             <strong>대표 사진</strong>
           </div>
-        </div>
-        <div class="cover__shade" aria-hidden="true"></div>
-        <div class="cover__content">
-          <h1 class="visually-hidden" id="couple-names">김병관 <span>·</span> 김도은</h1>
-          <p class="cover__name">Byung-kwan</p>
-          <p class="cover__ampersand">&amp;</p>
-          <p class="cover__name">Do-eun</p>
-          <p class="cover__date">2026 . 11 . 21</p>
-          <p class="visually-hidden">2026년 11월 21일 토요일 오후 1시 50분</p>
+          <div class="cover__shade" aria-hidden="true"></div>
+          <div class="cover__content">
+            <h1 class="visually-hidden" id="couple-names">김병관 <span>·</span> 김도은</h1>
+            <p class="cover__name">Byung-kwan</p>
+            <p class="cover__ampersand">&amp;</p>
+            <p class="cover__name">Do-eun</p>
+            <p class="cover__date">2026.11.21 <span class="cover__meridiem">pm</span> 01:50</p>
+            <p class="cover__venue">보타닉웨딩파크 오키드홀</p>
+            <p class="visually-hidden">2026년 11월 21일 토요일 오후 1시 50분</p>
+          </div>
         </div>
         <span class="cover__arrow" aria-hidden="true">↓</span>
       </section>
 
-      <section class="section invitation-copy fade-section" aria-labelledby="invitation-title" data-developer-section="invitation" data-console-section="// section: invitation — message">
-        <p class="developer-command" aria-hidden="true">$ weddingctl show invitation --with-family</p>
-        <h2 class="section-kicker" id="invitation-title">Invitation</h2>
+      <h1 class="developer-status" aria-label="개발자 모드"><span>[INFO]</span> develop mode</h1>
+
+      <section class="section invitation-copy fade-section" aria-labelledby="invitation-title" data-developer-section="invitation" data-console-section="// invitation">
+        <h2 class="section-kicker" id="invitation-title">
+          <span class="invitation-title__normal">
+            <span class="visually-hidden">초대의 글</span>
+            <img class="invitation-rings" src="./images/wedding-rings.webp" alt="" width="50" height="50" loading="lazy" decoding="async">
+          </span>
+          <span class="invitation-title__developer">
+            <span class="visually-hidden">초대의 글</span>
+            <img class="invitation-rings" src="./images/developer-wedding-rings.png" alt="" width="50" height="50" loading="lazy" decoding="async">
+          </span>
+        </h2>
         <div class="section-rule" aria-hidden="true"></div>
         <p class="greeting greeting--normal">
-          서로가 마주보며 다져온 사랑을<br>
-          이제 함께 한곳을 바라보며<br>
-          걸어갈 수 있는 큰 사랑으로<br>
-          키우고자 합니다.<br><br>
-          저희 두 사람이 사랑의 이름으로<br>
-          지켜나갈 수 있도록<br>
-          오셔서 축복해 주시면<br>
+          서로 다른 두길을 걸어온 저희가<br>
+          이제 하나의 길을 함께 걸어가려 합니다.<br>
+          바쁘시더라도 오셔서 축복해 주시면<br>
           더없는 기쁨으로 간직하겠습니다.
         </p>
         <p class="greeting greeting--developer">
@@ -79,7 +86,7 @@
           대화와 믿음으로 하나씩 <span class="developer-term">resolve</span>해 왔습니다.<br><br>
           이제 두 마음을 평생이라는 <span class="developer-term">main branch</span>에<br>
           <span class="developer-term">merge</span>하려 합니다.<br>
-          저희의 새로운 release를 따뜻한 마음으로<br>
+          저희의 새로운 <span class="developer-term">release</span>를 따뜻한 마음으로<br>
           <span class="developer-term">approve</span>해 주세요.
         </p>
         <div class="family">
@@ -88,16 +95,13 @@
         </div>
       </section>
 
-      <section class="section section--dark schedule-calendar fade-section" aria-labelledby="schedule-title" data-developer-section="schedule" data-console-section="// section: schedule — calendar">
-        <p class="developer-command" aria-hidden="true">$ weddingctl schedule --date 2026-11-21T13:50</p>
-        <h2 class="section-kicker" id="schedule-title">When &amp; Where</h2>
+      <section class="section section--dark schedule-calendar fade-section" aria-labelledby="schedule-title" data-developer-section="schedule" data-console-section="// schedule">
+        <h2 class="section-kicker" id="schedule-title">예약 일시</h2>
         <div class="section-rule section-rule--dark" aria-hidden="true"></div>
-        <p class="schedule__date">2026. 11. 21. SAT</p>
-        <p class="schedule__time">오후 1시 50분</p>
-        <p class="schedule__venue">서울 강서구 보타닉 웨딩파크</p>
+        <p class="schedule__date">2026년 11월 21일 토요일 오후 1시 50분</p>
 
         <div class="calendar-wrap">
-          <p class="calendar__month">November</p>
+          <p class="calendar__month">November<span class="developer-calendar-year"> 2026</span></p>
           <table class="calendar" aria-label="2026년 11월 예식 달력">
             <thead>
               <tr>
@@ -120,9 +124,8 @@
         </div>
       </section>
 
-      <section class="section gallery-section fade-section" aria-labelledby="gallery-title" data-developer-section="gallery" data-console-section="// section: gallery — assets">
-        <p class="developer-command" aria-hidden="true">$ weddingctl gallery --interactive</p>
-        <h2 class="section-kicker" id="gallery-title">Gallery</h2>
+      <section class="section gallery-section fade-section" aria-labelledby="gallery-title" data-developer-section="gallery" data-console-section="// gallery">
+        <h2 class="section-kicker" id="gallery-title">갤러리</h2>
         <div class="section-rule" aria-hidden="true"></div>
         <div class="gallery-viewport">
           <div class="gallery-grid" id="gallery-grid" aria-busy="false"></div>
@@ -135,73 +138,81 @@
         <p class="gallery-page" id="gallery-page" aria-live="polite">1 / 3</p>
       </section>
 
-      <section class="section location fade-section" aria-labelledby="location-title" data-developer-section="location" data-console-section="// section: venue — route">
-        <p class="developer-command" aria-hidden="true">$ weddingctl venue --open-map</p>
-        <h2 class="section-kicker" id="location-title">Location</h2>
+      <section class="section location fade-section" aria-labelledby="location-title" data-developer-section="location" data-console-section="// location">
+        <h2 class="section-kicker" id="location-title">오시는 길</h2>
         <div class="section-rule" aria-hidden="true"></div>
-        <p class="location__venue">보타닉 웨딩파크</p>
+        <p class="location__venue">보타닉 웨딩파크 오키드홀</p>
         <p class="location__address">서울특별시 강서구 마곡중앙5로 6</p>
-        <div class="map-frame">
-          <div class="media-placeholder media-placeholder--map" role="img" aria-label="약도와 지도 자리표시자">
-            <span aria-hidden="true">MAP</span>
-            <strong>약도 이미지</strong>
+        <div class="location-map">
+          <div class="map-frame" id="venue-map-frame" data-map-state="paused">
+            <div class="venue-map-canvas" id="venue-map" role="region" aria-label="보타닉 웨딩파크 네이버 지도" hidden></div>
+            <p class="venue-map-status" id="venue-map-status" role="status">약도가 없습니다</p>
           </div>
-        </div>
-        <div class="map-actions">
-          <a
-            class="map-button map-button--primary"
-            id="kakao-link"
-            aria-label="카카오맵 길찾기"
-            href="https://map.kakao.com/link/search/%EB%B3%B4%ED%83%80%EB%8B%89%20%EC%9B%A8%EB%94%A9%ED%8C%8C%ED%81%AC"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img class="map-button__icon" src="./images/map-icons/kakao.svg" alt="" width="22" height="22" loading="lazy" decoding="async">
-            <span class="map-button__label">카카오맵</span>
-          </a>
-          <a
-            class="map-button"
-            id="naver-link"
-            href="https://map.naver.com/p/search/%EB%B3%B4%ED%83%80%EB%8B%89%20%EC%9B%A8%EB%94%A9%ED%8C%8C%ED%81%AC"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img class="map-button__icon" src="./images/map-icons/naver.svg" alt="" width="22" height="22" loading="lazy" decoding="async">
-            <span class="map-button__label">네이버지도</span>
-          </a>
-          <a
-            class="map-button"
-            id="tmap-link"
-            href="https://www.tmap.co.kr/tmap2/mobile/search.jsp?name=%EB%B3%B4%ED%83%80%EB%8B%89%20%EC%9B%A8%EB%94%A9%ED%8C%8C%ED%81%AC"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img class="map-button__icon" src="./images/map-icons/tmap.svg" alt="" width="22" height="22" loading="lazy" decoding="async">
-            <span class="map-button__label">TMAP</span>
-          </a>
+          <div class="map-actions">
+            <a
+              class="map-button map-button--primary"
+              id="kakao-link"
+              aria-label="카카오맵 길찾기"
+              href="https://map.kakao.com/link/search/%EB%B3%B4%ED%83%80%EB%8B%89%20%EC%9B%A8%EB%94%A9%ED%8C%8C%ED%81%AC"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img class="map-button__icon" src="./images/map-icons/kakao.svg" alt="" width="22" height="22" loading="lazy" decoding="async">
+              <img class="map-button__icon map-button__icon--color" src="./images/map-icons/kakao-color.png" alt="" width="16" height="16" loading="lazy" decoding="async">
+              <span class="map-button__label">카카오맵</span>
+            </a>
+            <a
+              class="map-button"
+              id="naver-link"
+              href="https://map.naver.com/p/search/%EB%B3%B4%ED%83%80%EB%8B%89%20%EC%9B%A8%EB%94%A9%ED%8C%8C%ED%81%AC"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img class="map-button__icon" src="./images/map-icons/naver.svg" alt="" width="22" height="22" loading="lazy" decoding="async">
+              <img class="map-button__icon map-button__icon--color" src="./images/map-icons/naver-color.png" alt="" width="16" height="16" loading="lazy" decoding="async">
+              <span class="map-button__label">네이버지도</span>
+            </a>
+            <a
+              class="map-button"
+              id="tmap-link"
+              href="https://www.tmap.co.kr/tmap2/mobile/search.jsp?name=%EB%B3%B4%ED%83%80%EB%8B%89%20%EC%9B%A8%EB%94%A9%ED%8C%8C%ED%81%AC"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img class="map-button__icon" src="./images/map-icons/tmap.svg" alt="" width="22" height="22" loading="lazy" decoding="async">
+              <img class="map-button__icon map-button__icon--color" src="./images/map-icons/tmap-color.png" alt="" width="14" height="14" loading="lazy" decoding="async">
+              <span class="map-button__label">TMAP</span>
+            </a>
+          </div>
         </div>
         <div class="map-fallback" id="map-fallback" hidden>
           <p id="map-fallback-message" role="status" aria-live="polite"></p>
           <a class="map-fallback__link" id="map-fallback-link" target="_blank" rel="noopener noreferrer">다른 방법으로 열기</a>
         </div>
-        <div class="transport">
-          <p><strong>지하철</strong><br>5호선 발산역 3번 출구에서 도보 8분</p>
-          <p><strong>버스</strong><br>보타닉공원 정류장 하차 · 간선 605 / 지선 6642</p>
-          <p><strong>주차</strong><br>건물 내 주차장 이용 · 2시간 무료</p>
-        </div>
       </section>
 
-      <section class="section section--dark thanks fade-section" aria-labelledby="thanks-title" data-developer-section="accounts" data-console-section="// section: accounts — copy">
-        <p class="developer-command" aria-hidden="true">$ weddingctl accounts --select-side</p>
-        <h2 class="section-kicker" id="thanks-title">Thanks to</h2>
+      <section class="section section--dark thanks fade-section" aria-labelledby="thanks-title" data-developer-section="accounts" data-console-section="// accounts">
+        <h2 class="section-kicker" id="thanks-title">마음 전하실 곳</h2>
         <div class="section-rule section-rule--dark" aria-hidden="true"></div>
-        <p class="thanks__copy">
-          축하의 마음을 전하고 싶으신 분들을 위해<br>
-          계좌번호를 안내드립니다.
-        </p>
         <div class="account-actions">
-          <button class="account-button" type="button" data-account-side="groom">신랑측 계좌번호</button>
-          <button class="account-button account-button--accent" type="button" data-account-side="bride">신부측 계좌번호</button>
+          <div class="account-group">
+            <button class="account-button" id="groom-accounts-toggle" type="button" data-account-side="groom" aria-expanded="false" aria-controls="groom-accounts-panel">
+              <span class="account-button__normal">신랑측에게</span>
+              <img class="account-button__chevron" src="./images/account-icons/chevron-down.svg" alt="" width="16" height="16">
+            </button>
+            <div class="account-panel" id="groom-accounts-panel" role="region" aria-labelledby="groom-accounts-toggle" aria-hidden="true" inert>
+              <div class="account-panel__inner"><div class="account-panel__list" id="groom-accounts-list"></div></div>
+            </div>
+          </div>
+          <div class="account-group">
+            <button class="account-button account-button--accent" id="bride-accounts-toggle" type="button" data-account-side="bride" aria-expanded="false" aria-controls="bride-accounts-panel">
+              <span class="account-button__normal">신부측에게</span>
+              <img class="account-button__chevron" src="./images/account-icons/chevron-down.svg" alt="" width="16" height="16">
+            </button>
+            <div class="account-panel" id="bride-accounts-panel" role="region" aria-labelledby="bride-accounts-toggle" aria-hidden="true" inert>
+              <div class="account-panel__inner"><div class="account-panel__list" id="bride-accounts-list"></div></div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -227,29 +238,32 @@
       <footer class="footer" data-developer-section="thanks" data-console-section="// section: thanks — complete">
         <p class="developer-command" aria-hidden="true">$ weddingctl complete --with-gratitude</p>
         <div class="footer__heading">
-          <button class="mode-toggle" id="developer-toggle" type="button" aria-pressed="false" title="화면 모드 전환">
+          <button class="mode-toggle" id="developer-toggle" type="button" aria-pressed="false" aria-describedby="developer-mode-hint" title="화면 모드 전환">
             <span class="mode-toggle__normal">
               <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
                 <path d="m7 7-5 5 5 5m10-10 5 5-5 5M14.5 4l-5 16"/>
               </svg>
               <span>develop mode</span>
             </span>
-            <span class="mode-toggle__developer">일반 모드로</span>
+            <span class="mode-toggle__developer">
+              <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m7 7-5 5 5 5m10-10 5 5-5 5M14.5 4l-5 16"/>
+              </svg>
+              <span>일반 모드로</span>
+            </span>
           </button>
+          <p class="mode-toggle-hint" id="developer-mode-hint">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+              <circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>
+            </svg>
+            <span>누르면 개발자 버전으로 전환됩니다.</span>
+          </p>
         </div>
       </footer>
 
       <div class="petal-layer" id="petal-layer" aria-hidden="true"></div>
       <canvas class="developer-particle-layer" id="developer-particle-layer" aria-hidden="true"></canvas>
     </main>
-
-    <dialog class="account-dialog" id="account-dialog" aria-labelledby="account-dialog-title">
-      <div class="dialog__header">
-        <h2 id="account-dialog-title">계좌번호</h2>
-        <button class="dialog__close" id="account-dialog-close" type="button" aria-label="계좌번호 닫기">✕</button>
-      </div>
-      <div class="account-dialog__list" id="account-dialog-list"></div>
-    </dialog>
 
     <dialog class="photo-viewer" id="photo-viewer" aria-labelledby="photo-viewer-label">
       <div class="photo-viewer__header">

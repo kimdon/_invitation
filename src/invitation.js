@@ -1,24 +1,24 @@
 const DAY_MS = 86_400_000;
 
 export const GALLERY_PHOTOS = Object.freeze([
-  "./images/gallery/IMG_1239.JPG",
-  "./images/gallery/IMG_6924.JPG",
-  "./images/gallery/IMG_6963.JPG",
-  "./images/gallery/IMG_6964.JPG",
-  "./images/gallery/IMG_6965.JPG",
-  "./images/gallery/IMG_6966.JPG",
-  "./images/gallery/IMG_6968.JPG",
-  "./images/gallery/IMG_6973.JPG",
-  "./images/gallery/IMG_6977.JPG",
-  "./images/gallery/IMG_6978.JPG",
-  "./images/gallery/IMG_6979.JPG",
-  "./images/gallery/IMG_6980.JPG",
-  "./images/gallery/IMG_6981.JPG",
-  "./images/gallery/IMG_6983.JPG",
-  "./images/gallery/IMG_9159.JPG",
-  "./images/gallery/IMG_9239.JPG",
-  "./images/gallery/IMG_9337.JPG",
-]);
+  "./images/gallery/IMG_6000.JPG",
+  "./images/gallery/IMG_6001.JPG",
+  "./images/gallery/IMG_6002.JPG",
+  "./images/gallery/IMG_6004.JPG",
+  "./images/gallery/IMG_6006.JPG",
+  "./images/gallery/IMG_6007.JPG",
+  "./images/gallery/IMG_6008.JPG",
+  "./images/gallery/IMG_6010.JPG",
+  "./images/gallery/IMG_6014.JPG",
+  "./images/gallery/IMG_6015.JPG",
+  "./images/gallery/IMG_6020.JPG",
+  "./images/gallery/IMG_6025.JPG",
+  "./images/gallery/IMG_6030.JPG",
+  "./images/gallery/IMG_6035.JPG",
+  "./images/gallery/IMG_7001.JPG",
+  "./images/gallery/IMG_7010.JPG",
+  "./images/gallery/IMG_7030.JPG",
+].sort((left, right) => Number(left.match(/IMG_(\d+)/)[1]) - Number(right.match(/IMG_(\d+)/)[1])));
 
 const ACCOUNT_GROUPS = {
   groom: [

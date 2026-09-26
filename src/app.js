@@ -12,6 +12,7 @@ import {
   getDdayDisplay,
   getGallerySources,
 } from "./invitation.js";
+import { setupVenueMap } from "./venue-map.js";
 
 const GALLERY_SIZE = GALLERY_PHOTOS.length;
 const GALLERY_PER_PAGE = 6;
@@ -504,34 +505,40 @@ function createAccountRow(account, showToast) {
 
   const content = document.createElement("div");
   content.className = "account-row__content";
-  const details = document.createElement("div");
   const number = document.createElement("p");
   number.className = "account-row__number";
-  number.textContent = `${account.bank} ${account.number}`;
-  const holder = document.createElement("p");
-  holder.className = "account-row__holder";
-  holder.textContent = `예금주 ${account.holder}`;
-  details.append(number, holder);
+  number.textContent = account.number;
 
   const copy = document.createElement("button");
   copy.type = "button";
   copy.className = "account-row__copy";
-  copy.textContent = "복사";
   copy.setAttribute("aria-label", `${account.role} 계좌번호 복사`);
   copy.addEventListener("click", async () => {
     await copyAccountNumber(account.number);
     showToast();
   });
-  content.append(details, copy);
-  row.append(role, content);
+  const name = document.createElement("span");
+  name.className = "account-row__name";
+  name.textContent = account.holder;
+  role.append(name);
+  const bank = document.createElement("p");
+  bank.className = "account-row__bank";
+  bank.textContent = account.bank;
+  const icon = document.createElement("img");
+  icon.src = "./images/account-icons/copy.svg";
+  icon.alt = "";
+  icon.width = 16;
+  icon.height = 16;
+  copy.append(icon);
+  content.append(number, copy);
+  row.append(role, bank, content);
   return row;
 }
 
-function setupAccountDialog() {
-  const dialog = document.getElementById("account-dialog");
-  const title = document.getElementById("account-dialog-title");
-  const list = document.getElementById("account-dialog-list");
-  const closeButton = document.getElementById("account-dialog-close");
+function setupAccountAccordions() {
+  const invitation = document.querySelector(".invitation");
+  const buttons = document.querySelectorAll("[data-account-side]");
+  const populatedSides = new Set();
   const toast = document.getElementById("copy-toast");
   let toastTimer;
 
@@ -544,26 +551,35 @@ function setupAccountDialog() {
     }, 1800);
   }
 
-  function close() {
-    if (dialog.open) dialog.close();
+  function syncPresentation() {
+    const visible = invitation.dataset.mode !== "switching";
+    buttons.forEach((button) => {
+      const panel = document.getElementById(`${button.dataset.accountSide}-accounts-panel`);
+      const open = visible && panel.classList.contains("is-open");
+      panel.inert = !open;
+      panel.setAttribute("aria-hidden", String(!open));
+      button.setAttribute("aria-expanded", String(open));
+      button.setAttribute("aria-controls", `${button.dataset.accountSide}-accounts-panel`);
+    });
   }
 
-  function show(side) {
-    const accounts = getAccountGroup(side);
-    title.textContent = side === "bride" ? "신부측 계좌번호" : "신랑측 계좌번호";
-    list.replaceChildren(...accounts.map((account) => createAccountRow(account, showToast)));
-    if (!dialog.open) dialog.showModal();
-    document.body.classList.add("is-locked");
-  }
-
-  document.querySelectorAll("[data-account-side]").forEach((button) => {
-    button.addEventListener("click", () => show(button.dataset.accountSide));
+  buttons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const side = button.dataset.accountSide;
+      if (invitation.dataset.mode === "switching") return;
+      const panel = document.getElementById(`${side}-accounts-panel`);
+      if (!populatedSides.has(side)) {
+        document.getElementById(`${side}-accounts-list`).replaceChildren(
+          ...getAccountGroup(side).map((account) => createAccountRow(account, showToast)),
+        );
+        populatedSides.add(side);
+      }
+      panel.classList.toggle("is-open");
+      syncPresentation();
+    });
   });
-  closeButton.addEventListener("click", close);
-  dialog.addEventListener("click", (event) => {
-    if (event.target === dialog) close();
-  });
-  dialog.addEventListener("close", () => document.body.classList.remove("is-locked"));
+  syncPresentation();
+  new MutationObserver(syncPresentation).observe(invitation, { attributes: true, attributeFilter: ["data-mode"] });
 }
 
 function setupMapLinks() {
@@ -812,6 +828,7 @@ function setupDeveloperMode() {
     invitation.setAttribute("aria-busy", "true");
     document.body.classList.add("is-developer-mode", "is-switching-mode");
     toggle.setAttribute("aria-pressed", "true");
+    toggle.removeAttribute("aria-describedby");
     toggle.disabled = true;
     transition.classList.remove("is-exiting");
     transitionBrand.hidden = true;
@@ -842,6 +859,7 @@ function setupDeveloperMode() {
     invitation.setAttribute("aria-busy", "false");
     document.body.classList.remove("is-developer-mode", "is-switching-mode");
     toggle.setAttribute("aria-pressed", "false");
+    toggle.setAttribute("aria-describedby", "developer-mode-hint");
     toggle.disabled = false;
     transition.hidden = true;
     transition.classList.remove("is-exiting");
@@ -1013,8 +1031,9 @@ renderCoverPhoto();
 renderCalendar();
 const openViewer = setupPhotoViewer();
 setupGallery(openViewer);
-setupAccountDialog();
+setupAccountAccordions();
 setupMapLinks();
+setupVenueMap();
 setupDeveloperMode();
 setupRevealAnimations();
 addPetals();
