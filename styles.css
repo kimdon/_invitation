@@ -30,6 +30,10 @@ html {
   touch-action: pan-y;
 }
 
+html.is-gallery-collapsing {
+  overflow-anchor: none;
+}
+
 body {
   min-width: 0;
   background: var(--canvas);
