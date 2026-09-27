@@ -7,7 +7,7 @@ import { getAccountGroup } from "../src/invitation.js";
 const source = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
 const setup = source.slice(source.indexOf("function createAccountRow("), source.indexOf("function setupMapLinks("));
 
-function fixture() {
+function fixture(copyNumber) {
   class Element {
     children = [];
     attributes = {};
@@ -39,7 +39,7 @@ function fixture() {
     close() { this.open = false; }
   }
   const ids = Object.fromEntries([
-    "account-dialog", "account-dialog-title", "account-dialog-list", "account-dialog-close", "copy-toast",
+    "account-dialog", "account-dialog-title", "account-dialog-list", "account-dialog-close", "copy-status", "copy-toast",
     "groom-accounts-panel", "bride-accounts-panel", "groom-accounts-list", "bride-accounts-list",
   ].map((id) => [id, new Element()]));
   const invitation = new Element();
@@ -50,6 +50,9 @@ function fixture() {
     return button;
   });
   const copied = [];
+  const timers = new Map();
+  let now = 0;
+  let timerId = 0;
   let onModeChange;
   runInNewContext(`${setup}\nsetupAccountAccordions();`, {
     document: {
@@ -57,11 +60,20 @@ function fixture() {
       getElementById: (id) => ids[id], querySelector: () => invitation,
       querySelectorAll: () => buttons,
     },
-    getAccountGroup, copyAccountNumber: async (number) => { copied.push(number); },
+    getAccountGroup, copyAccountNumber: async (number) => { await copyNumber?.(number); copied.push(number); },
     MutationObserver: class { constructor(callback) { onModeChange = callback; } observe() {} },
-    setTimeout: () => 1, clearTimeout: () => {},
+    setTimeout: (callback, delay) => { timers.set(++timerId, { callback, at: now + delay }); return timerId; },
+    clearTimeout: (id) => timers.delete(id),
   });
-  return { ids, buttons, copied, mode: (mode) => { invitation.dataset.mode = mode; onModeChange?.(); } };
+  return {
+    ids, buttons, copied, mode: (mode) => { invitation.dataset.mode = mode; onModeChange?.(); },
+    advance: (ms) => {
+      now += ms;
+      for (const [id, timer] of timers) {
+        if (timer.at <= now) { timers.delete(id); timer.callback(); }
+      }
+    },
+  };
 }
 
 function findByClass(element, className) {
@@ -96,12 +108,48 @@ test("inline cards keep every existing account and only copy the selected accoun
       assert.equal(findByClass(row, "account-row__name").textContent, account.holder);
       assert.equal(findByClass(row, "account-row__bank").textContent, account.bank);
       assert.equal(findByClass(row, "account-row__number").textContent, account.number);
-      await findByClass(row, "account-row__copy").dispatch("click");
+      const button = findByClass(row, "account-row__copy");
+      await button.dispatch("click");
       assert.equal(f.copied.at(-1), account.number);
-      assert.equal(f.ids["copy-toast"].textContent, "계좌번호가 복사되었습니다.");
+      assert.equal(button.children[0].src, "./images/account-icons/check.svg");
+      assert.equal(button.getAttribute("aria-label"), `${account.role} 계좌번호 복사 완료`);
+      assert.equal(f.ids["copy-status"].textContent, `${account.role} 계좌번호가 복사되었습니다.`);
+      assert.equal(f.ids["copy-toast"].textContent, "");
     }
   }
   assert.doesNotMatch(setup, /toss:|kakaopay:|송금|location\.(href|assign|replace)/);
+});
+
+test("copy checks reset independently and a repeated click restarts only that button's timer", async () => {
+  const f = fixture();
+  await f.buttons[0].dispatch("click");
+  const [first, second] = f.ids["groom-accounts-list"].children.map((row) => findByClass(row, "account-row__copy"));
+  await first.dispatch("click");
+  f.advance(900);
+  await second.dispatch("click");
+  await first.dispatch("click");
+  f.advance(900);
+  assert.equal(first.children[0].src, "./images/account-icons/check.svg");
+  assert.equal(second.children[0].src, "./images/account-icons/check.svg");
+  f.advance(900);
+  assert.equal(first.children[0].src, "./images/account-icons/copy.svg");
+  assert.equal(second.children[0].src, "./images/account-icons/copy.svg");
+  assert.equal(first.getAttribute("aria-label"), `${getAccountGroup("groom")[0].role} 계좌번호 복사`);
+  await first.dispatch("click");
+  assert.equal(first.children[0].src, "./images/account-icons/check.svg");
+  assert.equal(second.children[0].src, "./images/account-icons/copy.svg");
+});
+
+test("a check is shown only after clipboard copying finishes", async () => {
+  let finish;
+  const f = fixture(() => new Promise((resolve) => { finish = resolve; }));
+  await f.buttons[0].dispatch("click");
+  const button = findByClass(f.ids["groom-accounts-list"].children[0], "account-row__copy");
+  const pending = button.dispatch("click");
+  assert.equal(button.children[0].src, "./images/account-icons/copy.svg");
+  finish();
+  await pending;
+  assert.equal(button.children[0].src, "./images/account-icons/check.svg");
 });
 
 test("developer mode shares inline accounts and preserves accessible state through mode changes", async () => {
