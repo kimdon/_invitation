@@ -84,6 +84,66 @@ a {
   background: #433c34;
 }
 
+.bgm-toggle {
+  position: fixed;
+  z-index: 95;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, calc((100vw - 430px) / 2 + 12px));
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+}
+
+.bgm-toggle::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.bgm-toggle:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+.bgm-toggle:active {
+  transform: scale(0.94);
+}
+
+.bgm-toggle__play,
+.bgm-toggle__pause {
+  grid-area: 1 / 1;
+  width: 16px;
+  height: 16px;
+}
+
+.bgm-toggle__pause,
+.bgm-toggle:is([data-state="playing"], [data-state="loading"]) .bgm-toggle__play {
+  display: none;
+}
+
+.bgm-toggle:is([data-state="playing"], [data-state="loading"]) .bgm-toggle__pause {
+  display: block;
+}
+
+.invitation[data-mode="developer"] .bgm-toggle,
+.invitation[data-mode="switching"] .bgm-toggle {
+  border-color: #315b40;
+  background: #07110c;
+  color: #7ee787;
+}
+
 .cover__media,
 .cover__shade {
   position: absolute;

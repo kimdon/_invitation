@@ -18,6 +18,79 @@ const GALLERY_SIZE = GALLERY_PHOTOS.length;
 const GALLERY_PER_PAGE = 6;
 const WEDDING_DATE = new Date(2026, 10, 21, 12);
 
+function setupBackgroundMusic() {
+  const audio = document.getElementById("bgm-audio");
+  const button = document.getElementById("bgm-toggle");
+  const playlist = [audio.getAttribute("src"), "./bgm/wedding.mp3"];
+  let trackIndex = 0;
+  let requestId = 0;
+
+  function setState(state) {
+    const label = state === "playing" || state === "loading" ? "배경음악 일시정지"
+      : state === "error" ? "배경음악 다시 재생" : "배경음악 재생";
+    button.dataset.state = state;
+    button.setAttribute("aria-label", label);
+    button.setAttribute("aria-busy", String(state === "loading"));
+    button.title = state === "blocked" ? "화면을 터치하면 배경음악이 재생됩니다"
+      : state === "error" ? "배경음악을 불러오지 못했습니다. 눌러서 다시 시도해 주세요" : label;
+  }
+
+  function stopGestureRetry() {
+    document.removeEventListener("pointerup", retryAfterInteraction);
+    document.removeEventListener("keydown", retryAfterInteraction);
+  }
+
+  async function play() {
+    const request = ++requestId;
+    stopGestureRetry();
+    setState("loading");
+    try {
+      await audio.play();
+      if (request === requestId) setState(audio.paused ? "paused" : "playing");
+    } catch (error) {
+      if (request !== requestId) return;
+      if (error.name === "NotAllowedError") {
+        setState("blocked");
+        document.addEventListener("pointerup", retryAfterInteraction);
+        document.addEventListener("keydown", retryAfterInteraction);
+      } else {
+        setState(error.name === "AbortError" ? "paused" : "error");
+      }
+    }
+  }
+
+  function retryAfterInteraction(event) {
+    if (button.contains(event.target)) return;
+    if (event.type === "keydown" && !["Enter", " "].includes(event.key)) return;
+    void play();
+  }
+
+  button.addEventListener("click", () => {
+    if (!audio.paused || button.dataset.state === "loading") {
+      requestId += 1;
+      stopGestureRetry();
+      audio.pause();
+      setState("paused");
+    } else {
+      void play();
+    }
+  });
+  audio.addEventListener("playing", () => { stopGestureRetry(); setState("playing"); });
+  audio.addEventListener("pause", () => setState("paused"));
+  audio.addEventListener("ended", () => {
+    trackIndex = (trackIndex + 1) % playlist.length;
+    audio.src = playlist[trackIndex];
+    void play();
+  });
+  audio.addEventListener("error", () => {
+    requestId += 1;
+    stopGestureRetry();
+    setState("error");
+  });
+  audio.volume = 0.35;
+  void play();
+}
+
 function setupZoomPrevention() {
   const options = { passive: false, capture: true };
   const prevent = (event) => { if (event.cancelable) event.preventDefault(); };
@@ -1026,6 +1099,7 @@ function addPetals() {
   }
 }
 
+setupBackgroundMusic();
 setupZoomPrevention();
 renderCoverPhoto();
 renderCalendar();
