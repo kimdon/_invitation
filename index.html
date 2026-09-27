@@ -138,14 +138,17 @@
         <h2 class="section-kicker" id="gallery-title">갤러리</h2>
         <div class="section-rule" aria-hidden="true"></div>
         <div class="gallery-viewport">
-          <div class="gallery-grid" id="gallery-grid" aria-busy="false"></div>
+          <div class="gallery-grid" id="gallery-grid"></div>
         </div>
-        <div class="gallery-controls">
-          <button class="gallery-arrow" id="gallery-prev" type="button" aria-label="이전 사진 페이지">‹</button>
-          <div class="gallery-dots" id="gallery-dots" aria-label="갤러리 페이지 선택"></div>
-          <button class="gallery-arrow" id="gallery-next" type="button" aria-label="다음 사진 페이지">›</button>
+        <div class="gallery-reveal" id="gallery-more" hidden inert>
+          <div class="gallery-grid gallery-grid--more" id="gallery-more-grid"></div>
         </div>
-        <p class="gallery-page" id="gallery-page" aria-live="polite">1 / 3</p>
+        <button class="gallery-disclosure" id="gallery-disclosure" type="button" aria-expanded="false" aria-controls="gallery-more">
+          <span id="gallery-toggle-label">더 보기</span>
+          <img class="gallery-disclosure__icon" src="./images/account-icons/chevron-down.svg" alt="" width="16" height="16">
+        </button>
+        <p class="gallery-footnote">사진을 누르면 크게 볼 수 있어요</p>
+        <p class="visually-hidden" id="gallery-announcement" aria-live="polite"></p>
       </section>
 
       <section class="section location fade-section" aria-labelledby="location-title" data-developer-section="location" data-console-section="// location">
@@ -240,7 +243,7 @@
           <p class="agent-review__approved" id="ai-agent-approved" hidden></p>
         </article>
         <div class="developer-congratulations">
-          <p class="developer-congratulations__message">두 사람의 새로운 시작에,<br>따뜻한 승인을 보내주세요.</p>
+          <p class="developer-congratulations__message">두 사람의 새로운 시작을 따뜻한 PR 승인으로 축복해 주세요.</p>
           <button id="developer-congratulations" type="button" aria-describedby="developer-approval-hint">APPROVE ♥</button>
           <p class="developer-congratulations__hint" id="developer-approval-hint">APPROVE를 누르면 축하 폭죽이 터져요 <span aria-hidden="true">🎉</span></p>
         </div>

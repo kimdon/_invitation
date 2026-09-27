@@ -7,7 +7,6 @@ import {
   buildCalendarWeeks,
   buildExternalMapLinks,
   buildMobileMapLinks,
-  buildGalleryPage,
   getAccountGroup,
   getDdayDisplay,
   getGallerySources,
@@ -15,7 +14,7 @@ import {
 import { setupVenueMap } from "./venue-map.js";
 
 const GALLERY_SIZE = GALLERY_PHOTOS.length;
-const GALLERY_PER_PAGE = 6;
+const GALLERY_INITIAL_COUNT = 3;
 const WEDDING_DATE = new Date(2026, 10, 21, 12);
 
 function setupBackgroundMusic() {
@@ -427,121 +426,76 @@ function setupPhotoViewer() {
 }
 
 function createGalleryItem(number, openViewer, loading = "lazy") {
-  const item = document.createElement("div");
+  const item = document.createElement("button");
+  item.type = "button";
   item.className = "gallery-item";
+  item.setAttribute("aria-label", `사진 ${number} 크게 보기`);
+  item.addEventListener("click", () => openViewer(number));
 
   const placeholder = createPlaceholder(`사진 ${number}`);
   const image = loadOptionalImage(getGallerySources(number).thumbnail, `사진 ${number}`, placeholder, { loading });
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "gallery-open";
-  button.setAttribute("aria-label", `사진 ${number} 크게 보기`);
-  button.textContent = "⤢";
-  button.addEventListener("click", () => openViewer(number));
-
-  item.append(placeholder, image, button);
+  item.append(placeholder, image);
   return item;
 }
 
 function setupGallery(openViewer) {
+  const section = document.querySelector(".gallery-section");
   const grid = document.getElementById("gallery-grid");
-  const dots = document.getElementById("gallery-dots");
-  const pageLabel = document.getElementById("gallery-page");
-  const previous = document.getElementById("gallery-prev");
-  const next = document.getElementById("gallery-next");
+  const more = document.getElementById("gallery-more");
+  const moreGrid = document.getElementById("gallery-more-grid");
+  const toggle = document.getElementById("gallery-disclosure");
+  const label = document.getElementById("gallery-toggle-label");
+  const announcement = document.getElementById("gallery-announcement");
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-  const cachedPages = new Map();
-  const pageCount = buildGalleryPage(GALLERY_SIZE, GALLERY_PER_PAGE, 0).pageCount;
-  let page = 0;
+  const initialCount = Math.min(GALLERY_INITIAL_COUNT, GALLERY_SIZE);
+  let expanded = false;
   let changing = false;
-  let touchStart = null;
-
-  function getPageItems(galleryPage, loading) {
-    if (!cachedPages.has(galleryPage.page)) {
-      cachedPages.set(galleryPage.page, galleryPage.items.map((number) => createGalleryItem(number, openViewer, loading)));
-    }
-    return cachedPages.get(galleryPage.page);
-  }
 
   function updateControls() {
-    Array.from(dots.children).forEach((dot, index) => {
-      dot.classList.toggle("is-active", index === page);
-      dot.setAttribute("aria-current", index === page ? "page" : "false");
-      dot.disabled = changing;
-    });
-    previous.disabled = changing || page === 0;
-    next.disabled = changing || page === pageCount - 1;
-    pageLabel.textContent = `${page + 1} / ${pageCount}`;
-    grid.setAttribute("aria-busy", String(changing));
+    toggle.setAttribute("aria-expanded", String(expanded));
+    label.textContent = expanded ? "사진 접기" : "더 보기";
+    announcement.textContent = expanded
+      ? "전체 사진 " + GALLERY_SIZE + "장 표시"
+      : "전체 " + GALLERY_SIZE + "장 중 " + initialCount + "장 표시";
   }
 
-  async function changePage(requestedPage) {
-    const galleryPage = buildGalleryPage(GALLERY_SIZE, GALLERY_PER_PAGE, requestedPage);
-    if (changing || galleryPage.page === page) return;
-    changing = true;
-    updateControls();
-    let outgoing;
-    try {
-      const items = getPageItems(galleryPage, "eager");
-      // Keep the current page visible until the incoming thumbnails can be painted.
-      await Promise.allSettled(items.flatMap((item) => Array.from(item.querySelectorAll("img"), (image) => {
-        image.loading = "eager";
-        return image.decode();
-      })));
+  grid.replaceChildren(...Array.from({ length: initialCount }, (_, index) => createGalleryItem(index + 1, openViewer)));
+  more.hidden = true;
+  more.inert = true;
+  toggle.hidden = GALLERY_SIZE <= initialCount;
+  updateControls();
 
-      if (!reducedMotion.matches && typeof grid.animate === "function") {
-        outgoing = grid.cloneNode(true);
-        outgoing.removeAttribute("id");
-        outgoing.removeAttribute("aria-busy");
-        outgoing.classList.add("gallery-grid--outgoing");
-        outgoing.setAttribute("aria-hidden", "true");
-        outgoing.inert = true;
-        grid.parentElement.appendChild(outgoing);
+  toggle.addEventListener("click", async () => {
+    if (changing) return;
+    changing = true;
+    expanded = !expanded;
+    if (expanded && !moreGrid.children.length) {
+      // Request the remaining thumbnails only after the first expansion, then reuse them.
+      moreGrid.append(...Array.from({ length: GALLERY_SIZE - initialCount },
+        (_, index) => createGalleryItem(initialCount + index + 1, openViewer)));
+    }
+    more.hidden = false;
+    more.inert = !expanded;
+    updateControls();
+
+    try {
+      if (!expanded) {
+        const top = section.getBoundingClientRect().top;
+        if (top < 0) window.scrollTo({ top: Math.max(0, window.scrollY + top - 16), behavior: "instant" });
       }
-      grid.replaceChildren(...items);
-      page = galleryPage.page;
-      updateControls();
-      if (outgoing) {
-        await outgoing.animate([{ opacity: 1 }, { opacity: 0 }], {
-          duration: 180,
-          easing: "ease-out",
-          fill: "forwards",
-        }).finished.catch(() => {});
+      if (!reducedMotion.matches && typeof more.animate === "function") {
+        const height = more.scrollHeight + "px";
+        const animation = more.animate([
+          { height: expanded ? "0px" : height, opacity: expanded ? 0 : 1 },
+          { height: expanded ? height : "0px", opacity: expanded ? 1 : 0 },
+        ], { duration: expanded ? 360 : 280, easing: "cubic-bezier(.22, 1, .36, 1)" });
+        await animation.finished.catch(() => {});
       }
     } finally {
-      outgoing?.remove();
+      more.hidden = !expanded;
       changing = false;
-      updateControls();
     }
-  }
-
-  for (let index = 0; index < pageCount; index += 1) {
-    const dot = document.createElement("button");
-    dot.type = "button";
-    dot.className = "gallery-dot";
-    dot.setAttribute("aria-label", `갤러리 ${index + 1}페이지`);
-    dot.addEventListener("click", () => changePage(index));
-    dots.appendChild(dot);
-  }
-  previous.addEventListener("click", () => changePage(page - 1));
-  next.addEventListener("click", () => changePage(page + 1));
-  grid.addEventListener("touchstart", (event) => {
-    const touch = event.changedTouches[0];
-    touchStart = { x: touch.clientX, y: touch.clientY };
-  }, { passive: true });
-  grid.addEventListener("touchend", (event) => {
-    if (!touchStart) return;
-    const touch = event.changedTouches[0];
-    const dx = touch.clientX - touchStart.x;
-    const dy = touch.clientY - touchStart.y;
-    touchStart = null;
-    if (Math.abs(dx) > 46 && Math.abs(dx) > Math.abs(dy) * 1.4) {
-      changePage(page + (dx < 0 ? 1 : -1));
-    }
-  }, { passive: true });
-
-  grid.replaceChildren(...getPageItems(buildGalleryPage(GALLERY_SIZE, GALLERY_PER_PAGE, page), "lazy"));
-  updateControls();
+  });
 }
 
 function fallbackCopy(text) {
