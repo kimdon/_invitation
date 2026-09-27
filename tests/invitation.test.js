@@ -112,7 +112,8 @@ test("map buttons retain developer icons and use local color icons in normal mod
 });
 
 test("gallery sources include every optimized photo exactly once", async () => {
-  assert.ok(GALLERY_PHOTOS.length > 0);
+  assert.equal(GALLERY_PHOTOS.length, 18);
+  assert.equal(GALLERY_PHOTOS[0], "./images/gallery/IMG_5000.JPG");
   assert.equal(new Set(GALLERY_PHOTOS).size, GALLERY_PHOTOS.length);
   const numbers = GALLERY_PHOTOS.map((path) => Number(path.match(/\/IMG_(\d+)\.JPG$/)[1]));
   assert.deepEqual(numbers, [...numbers].sort((a, b) => a - b), "gallery photos stay in ascending IMG number order");
@@ -197,7 +198,7 @@ test("buildGalleryPage returns three pages without missing-photo slots", async (
   assert.deepEqual(buildGalleryPage(GALLERY_PHOTOS.length, 6, 99), {
     page: 2,
     pageCount: 3,
-    items: [13, 14, 15, 16, 17],
+    items: [13, 14, 15, 16, 17, 18],
   });
 });
 
@@ -530,6 +531,8 @@ test("approval uses one reusable canvas firework with reduced-motion protection"
   assert.match(app, /4\.5 \+ Math\.random\(\) \* 6/);
   assert.match(app, /1\.8 \+ Math\.random\(\) \* 1\.8/);
   assert.doesNotMatch(app, /particle\.textContent|symbols = \[/);
+  assert.doesNotMatch(app, /createFireworkSound|fireworkSound|AudioContext|sounds\/firework/);
+  assert.match(app, /setupBackgroundMusic\(\);/);
   assert.doesNotMatch(css, /@keyframes developer-particle/);
 });
 
@@ -575,7 +578,8 @@ test("the page exposes one shared invitation DOM with accessible developer contr
   assert.doesNotMatch(html, /id="visitor-message"/);
   assert.doesNotMatch(html, /id="developer-rsvp-log"/);
   assert.doesNotMatch(html, /id="developer-congratulations-form"/);
-  assert.match(html, /id="developer-congratulations" type="button">APPROVE ♥<\/button>/);
+  assert.match(html, /id="developer-congratulations" type="button" aria-describedby="developer-approval-hint">APPROVE ♥<\/button>/);
+  assert.match(html, /id="developer-approval-hint"/);
 
   for (const section of ["cover", "invitation", "schedule", "gallery", "location", "accounts", "thanks"]) {
     assert.match(html, new RegExp(`data-developer-section="${section}"`));
