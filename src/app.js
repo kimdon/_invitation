@@ -2,18 +2,17 @@ import {
   AI_GUEST_MESSAGES,
   DEVELOPER_TRANSITION_COMMANDS,
   FIREWORK_BURST_PLAN,
-  GALLERY_PHOTOS,
   buildDeveloperSequence,
   buildCalendarWeeks,
   buildExternalMapLinks,
   buildMobileMapLinks,
   getAccountGroup,
   getDdayDisplay,
+  getGalleryPhotos,
   getGallerySources,
 } from "./invitation.js";
 import { setupVenueMap } from "./venue-map.js";
 
-const GALLERY_SIZE = GALLERY_PHOTOS.length;
 const GALLERY_INITIAL_COUNT = 3;
 const WEDDING_DATE = new Date(2026, 10, 21, 12);
 
@@ -224,6 +223,8 @@ function setupPhotoViewer() {
   const status = document.getElementById("photo-viewer-status");
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   const imageCache = new Map();
+  let galleryMode = "normal";
+  let gallerySize = getGalleryPhotos(galleryMode).length;
   let current = 1;
   let activeFrame = null;
   let busy = false;
@@ -241,7 +242,7 @@ function setupPhotoViewer() {
       image.decoding = "async";
       image.draggable = false;
       image.fetchPriority = priority;
-      image.src = getGallerySources(number).full;
+      image.src = getGallerySources(number, galleryMode).full;
       entry = { image, ready: null };
       entry.ready = image.decode().then(() => image).catch((error) => {
         if (imageCache.get(number) === entry) imageCache.delete(number);
@@ -255,8 +256,8 @@ function setupPhotoViewer() {
   }
 
   function prepareNeighbors() {
-    const nextNumber = current % GALLERY_SIZE + 1;
-    const previousNumber = (current - 2 + GALLERY_SIZE) % GALLERY_SIZE + 1;
+    const nextNumber = current % gallerySize + 1;
+    const previousNumber = (current - 2 + gallerySize) % gallerySize + 1;
     const keep = new Set([current, nextNumber, previousNumber]);
     for (const number of imageCache.keys()) if (!keep.has(number)) imageCache.delete(number);
     const connection = navigator.connection;
@@ -302,7 +303,7 @@ function setupPhotoViewer() {
       content.replaceChildren(incoming);
       activeFrame = incoming;
       current = number;
-      label.textContent = `${current} / ${GALLERY_SIZE}`;
+      label.textContent = `${current} / ${gallerySize}`;
       prepareNeighbors();
     } catch {
       if (request === requestId && dialog.open) {
@@ -319,7 +320,7 @@ function setupPhotoViewer() {
 
   function move(offset) {
     if (busy || multiTouch) return;
-    render(((current - 1 + offset + GALLERY_SIZE) % GALLERY_SIZE) + 1, offset);
+    render(((current - 1 + offset + gallerySize) % gallerySize) + 1, offset);
   }
 
   function reset() {
@@ -343,10 +344,12 @@ function setupPhotoViewer() {
     document.body.classList.remove("is-locked");
   }
 
-  function show(number) {
+  function show(number, mode = "normal") {
     reset();
+    galleryMode = mode;
+    gallerySize = getGalleryPhotos(mode).length;
     current = number;
-    label.textContent = `${current} / ${GALLERY_SIZE}`;
+    label.textContent = `${current} / ${gallerySize}`;
     if (!dialog.open) dialog.showModal();
     document.body.classList.add("is-locked");
     render(number);
@@ -425,20 +428,21 @@ function setupPhotoViewer() {
   return show;
 }
 
-function createGalleryItem(number, openViewer, loading = "lazy") {
+function createGalleryItem(number, openViewer, loading = "lazy", mode = "normal") {
   const item = document.createElement("button");
   item.type = "button";
   item.className = "gallery-item";
   item.setAttribute("aria-label", `사진 ${number} 크게 보기`);
-  item.addEventListener("click", () => openViewer(number));
+  item.addEventListener("click", () => openViewer(number, mode));
 
   const placeholder = createPlaceholder(`사진 ${number}`);
-  const image = loadOptionalImage(getGallerySources(number).thumbnail, `사진 ${number}`, placeholder, { loading });
+  const image = loadOptionalImage(getGallerySources(number, mode).thumbnail, `사진 ${number}`, placeholder, { loading });
   item.append(placeholder, image);
   return item;
 }
 
 function setupGallery(openViewer) {
+  const invitation = document.querySelector(".invitation");
   const section = document.querySelector(".gallery-section");
   const grid = document.getElementById("gallery-grid");
   const more = document.getElementById("gallery-more");
@@ -447,23 +451,45 @@ function setupGallery(openViewer) {
   const label = document.getElementById("gallery-toggle-label");
   const announcement = document.getElementById("gallery-announcement");
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-  const initialCount = Math.min(GALLERY_INITIAL_COUNT, GALLERY_SIZE);
+  const cachedItems = new Map();
+  let mode;
+  let gallerySize = 0;
+  let initialCount = 0;
   let expanded = false;
   let changing = false;
 
   function updateControls() {
     toggle.setAttribute("aria-expanded", String(expanded));
-    label.textContent = expanded ? "사진 접기" : "더 보기";
+    label.textContent = expanded ? "접기" : "더 보기";
     announcement.textContent = expanded
-      ? "전체 사진 " + GALLERY_SIZE + "장 표시"
-      : "전체 " + GALLERY_SIZE + "장 중 " + initialCount + "장 표시";
+      ? "전체 사진 " + gallerySize + "장 표시"
+      : "전체 " + gallerySize + "장 중 " + initialCount + "장 표시";
   }
 
-  grid.replaceChildren(...Array.from({ length: initialCount }, (_, index) => createGalleryItem(index + 1, openViewer)));
-  more.hidden = true;
-  more.inert = true;
-  toggle.hidden = GALLERY_SIZE <= initialCount;
-  updateControls();
+  function getItems(count) {
+    if (!cachedItems.has(mode)) cachedItems.set(mode, []);
+    const items = cachedItems.get(mode);
+    while (items.length < count) items.push(createGalleryItem(items.length + 1, openViewer, "lazy", mode));
+    return items;
+  }
+
+  function syncMode() {
+    const nextMode = invitation.dataset.mode;
+    if (changing || nextMode === mode || !["normal", "developer"].includes(nextMode)) return;
+    mode = nextMode;
+    gallerySize = getGalleryPhotos(mode).length;
+    initialCount = Math.min(GALLERY_INITIAL_COUNT, gallerySize);
+    const items = getItems(expanded ? gallerySize : initialCount);
+    grid.replaceChildren(...items.slice(0, initialCount));
+    moreGrid.replaceChildren(...items.slice(initialCount));
+    more.hidden = !expanded;
+    more.inert = !expanded;
+    toggle.hidden = gallerySize <= initialCount;
+    updateControls();
+  }
+
+  syncMode();
+  new MutationObserver(syncMode).observe(invitation, { attributes: true, attributeFilter: ["data-mode"] });
 
   toggle.addEventListener("click", async () => {
     if (changing) return;
@@ -471,29 +497,49 @@ function setupGallery(openViewer) {
     expanded = !expanded;
     if (expanded && !moreGrid.children.length) {
       // Request the remaining thumbnails only after the first expansion, then reuse them.
-      moreGrid.append(...Array.from({ length: GALLERY_SIZE - initialCount },
-        (_, index) => createGalleryItem(initialCount + index + 1, openViewer)));
+      moreGrid.replaceChildren(...getItems(gallerySize).slice(initialCount));
     }
     more.hidden = false;
     more.inert = !expanded;
     updateControls();
 
+    const startScroll = window.scrollY;
+    const sectionTop = expanded ? 0 : section.getBoundingClientRect().top;
+    const targetScroll = sectionTop < 0 ? Math.max(0, startScroll + sectionTop - 16) : startScroll;
+    let animation;
+    let scrollFrame;
+    if (!expanded) document.documentElement.classList.add("is-gallery-collapsing");
+
     try {
-      if (!expanded) {
-        const top = section.getBoundingClientRect().top;
-        if (top < 0) window.scrollTo({ top: Math.max(0, window.scrollY + top - 16), behavior: "instant" });
-      }
       if (!reducedMotion.matches && typeof more.animate === "function") {
         const height = more.scrollHeight + "px";
-        const animation = more.animate([
+        animation = more.animate([
           { height: expanded ? "0px" : height, opacity: expanded ? 0 : 1 },
           { height: expanded ? height : "0px", opacity: expanded ? 1 : 0 },
-        ], { duration: expanded ? 360 : 280, easing: "cubic-bezier(.22, 1, .36, 1)" });
+        ], {
+          duration: expanded ? 360 : 480,
+          easing: expanded ? "cubic-bezier(.22, 1, .36, 1)" : "cubic-bezier(.4, 0, .2, 1)",
+          fill: "both",
+        });
+        if (targetScroll < startScroll) {
+          // Use the height animation's eased progress so the viewport never jumps ahead of it.
+          const syncScroll = () => {
+            const progress = animation.effect.getComputedTiming().progress ?? 0;
+            window.scrollTo({ top: startScroll + (targetScroll - startScroll) * progress, behavior: "instant" });
+            scrollFrame = window.requestAnimationFrame(syncScroll);
+          };
+          scrollFrame = window.requestAnimationFrame(syncScroll);
+        }
         await animation.finished.catch(() => {});
       }
     } finally {
+      window.cancelAnimationFrame(scrollFrame);
       more.hidden = !expanded;
+      animation?.cancel();
+      if (targetScroll < startScroll) window.scrollTo({ top: targetScroll, behavior: "instant" });
+      document.documentElement.classList.remove("is-gallery-collapsing");
       changing = false;
+      syncMode();
     }
   });
 }
