@@ -152,7 +152,7 @@ test("a check is shown only after clipboard copying finishes", async () => {
   assert.equal(button.children[0].src, "./images/account-icons/check.svg");
 });
 
-test("developer mode shares inline accounts and preserves accessible state through mode changes", async () => {
+test("both account cards reset to collapsed on every mode entry while retaining their rows", async () => {
   const f = fixture();
   f.mode("developer");
   assert.equal(f.buttons[0].getAttribute("aria-haspopup"), null);
@@ -174,9 +174,20 @@ test("developer mode shares inline accounts and preserves accessible state throu
   assert.equal(f.ids["groom-accounts-panel"].inert, true);
   f.mode("normal");
   assert.equal(f.buttons[0].getAttribute("aria-haspopup"), null);
-  assert.equal(f.buttons[0].getAttribute("aria-expanded"), "true");
-  assert.equal(f.ids["groom-accounts-panel"].inert, false);
-  await f.buttons[0].dispatch("click");
-  assert.equal(f.ids["groom-accounts-panel"].inert, true);
-  assert.equal(f.buttons[1].getAttribute("aria-expanded"), "true");
+  for (const mode of ["normal", "developer", "normal", "developer"]) {
+    f.mode(mode);
+    for (const [index, side] of ["groom", "bride"].entries()) {
+      const panel = f.ids[`${side}-accounts-panel`];
+      assert.equal(f.buttons[index].getAttribute("aria-expanded"), "false");
+      assert.equal(panel.classList.contains("is-open"), false);
+      assert.equal(panel.inert, true);
+      assert.equal(panel.getAttribute("aria-hidden"), "true");
+      const firstRow = f.ids[`${side}-accounts-list`].children[0];
+      await f.buttons[index].dispatch("click");
+      assert.equal(f.buttons[index].getAttribute("aria-expanded"), "true");
+      assert.equal(panel.inert, false);
+      assert.equal(f.ids[`${side}-accounts-list`].children.length, 3);
+      assert.equal(f.ids[`${side}-accounts-list`].children[0], firstRow);
+    }
+  }
 });

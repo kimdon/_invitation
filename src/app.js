@@ -477,6 +477,7 @@ function setupGallery(openViewer) {
     const nextMode = invitation.dataset.mode;
     if (changing || nextMode === mode || !["normal", "developer"].includes(nextMode)) return;
     mode = nextMode;
+    expanded = false;
     gallerySize = getGalleryPhotos(mode).length;
     initialCount = Math.min(GALLERY_INITIAL_COUNT, gallerySize);
     const items = getItems(expanded ? gallerySize : initialCount);
@@ -620,11 +621,16 @@ function setupAccountAccordions() {
   const invitation = document.querySelector(".invitation");
   const buttons = document.querySelectorAll("[data-account-side]");
   const populatedSides = new Set();
+  let mode;
 
   function syncPresentation() {
-    const visible = invitation.dataset.mode !== "switching";
+    const nextMode = invitation.dataset.mode;
+    const modeChanged = nextMode !== mode;
+    mode = nextMode;
+    const visible = mode !== "switching";
     buttons.forEach((button) => {
       const panel = document.getElementById(`${button.dataset.accountSide}-accounts-panel`);
+      if (modeChanged) panel.classList.remove("is-open");
       const open = visible && panel.classList.contains("is-open");
       panel.inert = !open;
       panel.setAttribute("aria-hidden", String(!open));
