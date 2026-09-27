@@ -2293,6 +2293,23 @@ body.is-developer-mode .petal-layer {
   margin-top: 22px;
 }
 
+.developer-congratulations__message {
+  margin: 0;
+  color: var(--terminal-text);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.9;
+  text-align: center;
+}
+
+.developer-congratulations__hint {
+  margin: 10px 0 0;
+  color: var(--terminal-dim);
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: center;
+}
+
 .developer-congratulations button {
   width: 100%;
   min-height: 48px;
@@ -2308,6 +2325,16 @@ body.is-developer-mode .petal-layer {
 .developer-congratulations button:disabled {
   cursor: default;
   opacity: 0.72;
+}
+
+.developer-congratulations button:disabled + .developer-congratulations__hint {
+  visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .developer-congratulations__hint {
+    display: none;
+  }
 }
 
 .developer-response {

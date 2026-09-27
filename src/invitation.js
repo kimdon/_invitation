@@ -1,6 +1,7 @@
 const DAY_MS = 86_400_000;
 
 export const GALLERY_PHOTOS = Object.freeze([
+  "./images/gallery/IMG_5000.JPG",
   "./images/gallery/IMG_6000.JPG",
   "./images/gallery/IMG_6001.JPG",
   "./images/gallery/IMG_6002.JPG",
