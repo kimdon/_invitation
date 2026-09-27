@@ -116,7 +116,7 @@ test("the entire gallery photo is an accessible button without a separate expand
   assert.deepEqual(opened, [4]);
 });
 
-test("theme switches load only that mode's photos and preserve expansion without rebuilding cached items", async () => {
+test("theme switches reset to three photos while reusing each mode's cached items", async () => {
   const f = galleryFixture({ reducedMotion: true, developerSize: 9 });
   const normalFirst = f.ids["gallery-grid"].children[0];
   assert.ok(f.images.every((item) => item.mode === "normal"));
@@ -131,14 +131,22 @@ test("theme switches load only that mode's photos and preserve expansion without
   const developerFirst = f.ids["gallery-grid"].children[0];
   f.mode("normal");
   assert.equal(f.ids["gallery-grid"].children[0], normalFirst);
+  assert.equal(f.ids["gallery-more"].hidden, true);
+  assert.equal(f.ids["gallery-more"].inert, true);
+  assert.equal(f.ids["gallery-toggle-label"].textContent, "더 보기");
+  assert.equal(f.ids["gallery-announcement"].textContent, "전체 18장 중 3장 표시");
+  await f.ids["gallery-disclosure"].click();
   assert.equal(f.ids["gallery-more-grid"].children.length, 15);
   assert.ok(f.ids["gallery-more-grid"].children.every((item) => item.mode === "normal"));
   f.mode("developer");
   assert.equal(f.ids["gallery-grid"].children[0], developerFirst);
   assert.equal(f.images.length, 27, "mode switching reuses each mode's existing image nodes");
-  await f.ids["gallery-disclosure"].click();
   assert.equal(f.ids["gallery-more"].hidden, true);
   assert.equal(f.ids["gallery-toggle-label"].textContent, "더 보기");
+  assert.equal(f.ids["gallery-announcement"].textContent, "전체 9장 중 3장 표시");
+  await f.ids["gallery-disclosure"].click();
+  assert.equal(f.ids["gallery-more"].hidden, false);
+  assert.equal(f.images.length, 27);
 });
 
 test("photo buttons pass their own gallery mode to the full-size viewer", () => {
@@ -203,16 +211,31 @@ for (const mode of ["normal", "developer"]) {
   });
 }
 
-test("gallery expansion survives theme switching and keeps photo nodes", async () => {
+test("returning to a mode collapses its gallery but keeps cached photo nodes", async () => {
   const f = galleryFixture({ reducedMotion: true });
   await f.ids["gallery-disclosure"].click();
   const fourth = f.ids["gallery-more-grid"].children[0];
   for (const mode of ["switching", "developer", "normal"]) f.mode(mode);
+  assert.equal(f.ids["gallery-more"].hidden, true);
+  assert.equal(f.ids["gallery-more-grid"].children[0], fourth);
+  assert.equal(f.ids["gallery-disclosure"].attributes["aria-expanded"], "false");
+  await f.ids["gallery-disclosure"].click();
   assert.equal(f.ids["gallery-more"].hidden, false);
   assert.equal(f.ids["gallery-more-grid"].children[0], fourth);
-  assert.equal(f.ids["gallery-disclosure"].attributes["aria-expanded"], "true");
-  await f.ids["gallery-disclosure"].click();
+});
+
+test("a mode change during expansion still enters the next mode with three photos", async () => {
+  const f = galleryFixture({ developerSize: 9 });
+  const opening = f.ids["gallery-disclosure"].click();
+  f.mode("developer");
+  f.animations[0].resolve();
+  await opening;
+  assert.equal(f.ids["gallery-grid"].children.length, 3);
+  assert.ok(f.ids["gallery-grid"].children.every((item) => item.mode === "developer"));
   assert.equal(f.ids["gallery-more"].hidden, true);
+  assert.equal(f.ids["gallery-more"].inert, true);
+  assert.equal(f.ids["gallery-disclosure"].attributes["aria-expanded"], "false");
+  assert.equal(f.ids["gallery-more-grid"].children.length, 0);
 });
 
 test("rapid clicks and cancelled animations cannot leave the disclosure locked", async () => {
