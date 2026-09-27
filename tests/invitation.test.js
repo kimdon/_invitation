@@ -280,7 +280,8 @@ test("the page uses the editorial invitation structure", async () => {
   assert.match(html, /id="groom-accounts-panel"/);
   assert.doesNotMatch(html, /id="account-dialog"/);
   assert.match(html, /id="photo-viewer"/);
-  assert.match(html, /id="copy-toast"/);
+  assert.match(html, /class="visually-hidden" id="copy-status" role="status"/);
+  assert.doesNotMatch(html, /id="copy-toast"/);
   assert.match(html, /서울특별시 강서구 마곡중앙5로 6/);
   assert.doesNotMatch(html, /<x-dc|<sc-if|<sc-for|image-slot|support\.js/);
 });

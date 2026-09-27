@@ -568,7 +568,7 @@ async function copyAccountNumber(text) {
   fallbackCopy(text);
 }
 
-function createAccountRow(account, showToast) {
+function createAccountRow(account) {
   const row = document.createElement("article");
   row.className = "account-row";
 
@@ -586,9 +586,17 @@ function createAccountRow(account, showToast) {
   copy.type = "button";
   copy.className = "account-row__copy";
   copy.setAttribute("aria-label", `${account.role} 계좌번호 복사`);
+  let copiedTimer;
   copy.addEventListener("click", async () => {
     await copyAccountNumber(account.number);
-    showToast();
+    icon.src = "./images/account-icons/check.svg";
+    copy.setAttribute("aria-label", `${account.role} 계좌번호 복사 완료`);
+    document.getElementById("copy-status").textContent = `${account.role} 계좌번호가 복사되었습니다.`;
+    clearTimeout(copiedTimer);
+    copiedTimer = setTimeout(() => {
+      icon.src = "./images/account-icons/copy.svg";
+      copy.setAttribute("aria-label", `${account.role} 계좌번호 복사`);
+    }, 1800);
   });
   const name = document.createElement("span");
   name.className = "account-row__name";
@@ -612,17 +620,6 @@ function setupAccountAccordions() {
   const invitation = document.querySelector(".invitation");
   const buttons = document.querySelectorAll("[data-account-side]");
   const populatedSides = new Set();
-  const toast = document.getElementById("copy-toast");
-  let toastTimer;
-
-  function showToast() {
-    toast.textContent = "계좌번호가 복사되었습니다.";
-    toast.hidden = false;
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => {
-      toast.hidden = true;
-    }, 1800);
-  }
 
   function syncPresentation() {
     const visible = invitation.dataset.mode !== "switching";
@@ -643,7 +640,7 @@ function setupAccountAccordions() {
       const panel = document.getElementById(`${side}-accounts-panel`);
       if (!populatedSides.has(side)) {
         document.getElementById(`${side}-accounts-list`).replaceChildren(
-          ...getAccountGroup(side).map((account) => createAccountRow(account, showToast)),
+          ...getAccountGroup(side).map((account) => createAccountRow(account)),
         );
         populatedSides.add(side);
       }

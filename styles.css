@@ -926,21 +926,6 @@ a {
   cursor: progress;
 }
 
-.copy-toast {
-  position: fixed;
-  z-index: 90;
-  bottom: 44px;
-  left: 50%;
-  padding: 12px 22px;
-  border-radius: 2px;
-  background: rgba(28, 25, 22, 0.95);
-  color: var(--paper);
-  font-size: 13px;
-  letter-spacing: 0.03em;
-  white-space: nowrap;
-  transform: translateX(-50%);
-}
-
 .petal-layer {
   position: absolute;
   z-index: 5;
@@ -1574,7 +1559,7 @@ a {
 }
 
 .invitation:is([data-mode="normal"], [data-mode="developer"]) .account-panel .account-row {
-  padding: 16px 0;
+  padding: 8px 0;
   border: 0;
   border-top: 1px solid #eeeeee;
   background: transparent;
@@ -1606,7 +1591,7 @@ a {
 .invitation:is([data-mode="normal"], [data-mode="developer"]) .account-panel .account-row__content {
   justify-content: flex-start;
   margin-top: 0;
-  gap: 2px;
+  gap: 0;
 }
 
 .invitation:is([data-mode="normal"], [data-mode="developer"]) .account-panel .account-row__number {
@@ -1617,19 +1602,37 @@ a {
 }
 
 .invitation:is([data-mode="normal"], [data-mode="developer"]) .account-panel .account-row__copy {
+  position: relative;
   display: inline-flex;
-  width: 44px;
-  height: 44px;
+  width: 28px;
+  height: 28px;
   align-items: center;
   justify-content: center;
   padding: 0;
-  border-radius: 6px;
+  border-radius: 4px;
   background: transparent;
   color: var(--text);
 }
 
+.invitation:is([data-mode="normal"], [data-mode="developer"]) .account-row__copy::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
+}
+
 .invitation:is([data-mode="normal"], [data-mode="developer"]) .account-row__copy img {
+  width: 14px;
+  height: 14px;
   opacity: 0.6;
+}
+
+.invitation:is([data-mode="normal"], [data-mode="developer"]) .account-row__copy img[src$="/check.svg"] {
+  filter: none;
+  opacity: 1;
 }
 
 .invitation:is([data-mode="normal"], [data-mode="developer"]) .account-button:focus-visible,
@@ -2081,7 +2084,7 @@ body.is-developer-mode .petal-layer {
   grid-template-columns: max-content minmax(0, 1fr);
   align-items: center;
   column-gap: 8px;
-  padding: 10px 0;
+  padding: 6px 0;
   border-color: var(--terminal-line);
   background: transparent;
 }
@@ -2108,7 +2111,7 @@ body.is-developer-mode .petal-layer {
 
 .invitation[data-mode="developer"] .account-panel .account-row__content {
   min-width: 0;
-  justify-content: space-between;
+  justify-content: flex-start;
 }
 
 .invitation[data-mode="developer"] .account-button__chevron,
