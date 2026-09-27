@@ -187,21 +187,6 @@ test("optimized gallery assets preserve photo shape with bounded dimensions and 
   }
 });
 
-test("buildGalleryPage returns three pages without missing-photo slots", async () => {
-  const { buildGalleryPage } = await import("../src/invitation.js");
-  assert.equal(typeof buildGalleryPage, "function");
-  assert.deepEqual(buildGalleryPage(GALLERY_PHOTOS.length, 6, 0), {
-    page: 0,
-    pageCount: 3,
-    items: [1, 2, 3, 4, 5, 6],
-  });
-  assert.deepEqual(buildGalleryPage(GALLERY_PHOTOS.length, 6, 99), {
-    page: 2,
-    pageCount: 3,
-    items: [13, 14, 15, 16, 17, 18],
-  });
-});
-
 test("getAccountGroup returns the requested three account holders", async () => {
   const { getAccountGroup } = await import("../src/invitation.js");
   assert.equal(typeof getAccountGroup, "function");
@@ -232,8 +217,8 @@ test("the page keeps external directions buttons alongside the lazy Naver map", 
   assert.match(html, /id="venue-map"/);
   assert.match(app, /setupVenueMap\(\)/);
   assert.doesNotMatch(html, /<script[^>]+oapi\.map\.naver\.com/);
-  assert.match(css, /\.gallery-dot\s*\{/);
-  assert.match(css, /\.gallery-dot\.is-active\s*\{/);
+  assert.match(css, /\.gallery-disclosure\s*\{[^}]*border:\s*0[^}]*background:\s*transparent/s);
+  assert.match(css, /\.gallery-footnote\s*\{[^}]*margin:\s*4px 0 0/s);
 });
 
 test("the page uses the requested bride and groom names everywhere", async () => {
@@ -313,7 +298,7 @@ test("the stylesheet defines the approved pure-white normal mode", async () => {
     /\.invitation\[data-mode="normal"\] \.cover__ampersand\s*\{[^}]*font-family:\s*Didot,\s*"Bodoni Moda",\s*"Bodoni MT",\s*"Times New Roman",\s*serif[^}]*font-style:\s*italic/s,
   );
   assert.match(css, /\.invitation\[data-mode="normal"\] \.section--dark\s*\{[^}]*background:\s*var\(--paper\)/s);
-  assert.match(css, /\.invitation\[data-mode="normal"\] \.gallery-item\s*\{[^}]*border:\s*1px solid var\(--ink\)/s);
+  assert.match(css, /\.invitation\[data-mode="normal"\] \.gallery-item\s*\{[^}]*border:\s*0/s);
   assert.match(css, /\.invitation\[data-mode="normal"\] \.calendar__wedding-day\s*\{[^}]*border-radius:\s*50%[^}]*background:\s*var\(--ink\)[^}]*color:\s*var\(--paper\)/s);
   assert.match(css, /\.invitation\[data-mode="normal"\] \.map-button,\s*\.invitation\[data-mode="developer"\] \.map-button\s*\{[^}]*height:\s*44px[^}]*gap:\s*4px[^}]*border-radius:\s*0/s);
   assert.match(css, /\.invitation\[data-mode="normal"\] \.map-button\s*\{[^}]*font-family:\s*"Invitation Map Labels"/s);
@@ -325,9 +310,9 @@ test("the stylesheet defines the approved pure-white normal mode", async () => {
 test("the app wires the approved invitation interactions", async () => {
   const app = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
 
-  assert.match(app, /buildGalleryPage/);
+  assert.doesNotMatch(app, /buildGalleryPage/);
   assert.match(app, /const GALLERY_SIZE = GALLERY_PHOTOS\.length;/);
-  assert.match(app, /const GALLERY_PER_PAGE = 6;/);
+  assert.match(app, /const GALLERY_INITIAL_COUNT = 3;/);
   assert.match(app, /getAccountGroup/);
   assert.match(app, /showModal\(\)/);
   assert.match(app, /navigator\.clipboard\.writeText/);
