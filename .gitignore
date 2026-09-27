@@ -10,3 +10,4 @@ node_modules/
 # Original / unoptimized source photos (not served by the site)
 images/originals/
 images/gallery/*.JPG
+images/gallery/develop-mode/

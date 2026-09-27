@@ -4,6 +4,7 @@ import { existsSync } from "node:fs";
 import { readFile, readdir, stat } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
+import * as galleryData from "../src/invitation.js";
 
 import {
   AI_GUEST_MESSAGES,
@@ -123,6 +124,33 @@ test("gallery sources include every optimized photo exactly once", async () => {
       .map((name) => `./images/gallery/optimized/${directory}/${name}`).sort();
     const listed = GALLERY_PHOTOS.map((_, index) => getGallerySources(index + 1)[variant]).sort();
     assert.deepEqual(listed, paths);
+  }
+});
+
+test("developer gallery uses all nine develop-mode originals in ascending IMG order", () => {
+  const names = ["IMG_200.HEIC", "IMG_210.JPG", "IMG_211.JPG", "IMG_220.HEIC", "IMG_300.HEIC", "IMG_310.HEIC", "IMG_320.JPG", "IMG_400.HEIC", "IMG_401.JPG"];
+  assert.deepEqual(galleryData.DEVELOPER_GALLERY_PHOTOS, names.map((name) => `./images/gallery/develop-mode/${name}`));
+  assert.equal(galleryData.getGalleryPhotos("normal"), GALLERY_PHOTOS);
+  assert.equal(galleryData.getGalleryPhotos("developer"), galleryData.DEVELOPER_GALLERY_PHOTOS);
+  assert.equal(getGallerySources(1).full, "./images/gallery/optimized/full/IMG_5000.webp");
+  assert.deepEqual(getGallerySources(1, "developer"), {
+    thumbnail: "./images/gallery/optimized/developer/thumbnails/IMG_200.webp",
+    full: "./images/gallery/optimized/developer/full/IMG_200.webp",
+  });
+});
+
+test("developer photos have lightweight web-ready variants without embedded camera metadata", async () => {
+  for (let number = 1; number <= 9; number += 1) {
+    const sources = getGallerySources(number, "developer");
+    assert.match(sources.full, /optimized\/developer\/full\//);
+    for (const [variant, edge, maxBytes] of [["thumbnail", 480, 200_000], ["full", 1800, 750_000]]) {
+      const path = new URL(`../${sources[variant]}`, import.meta.url);
+      const metadata = await sharp(fileURLToPath(path)).metadata();
+      assert.equal(metadata.format, "webp");
+      assert.ok(Math.max(metadata.width, metadata.height) <= edge);
+      assert.equal(metadata.exif, undefined);
+      assert.ok((await stat(path)).size < maxBytes);
+    }
   }
 });
 
@@ -311,7 +339,6 @@ test("the app wires the approved invitation interactions", async () => {
   const app = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
 
   assert.doesNotMatch(app, /buildGalleryPage/);
-  assert.match(app, /const GALLERY_SIZE = GALLERY_PHOTOS\.length;/);
   assert.match(app, /const GALLERY_INITIAL_COUNT = 3;/);
   assert.match(app, /getAccountGroup/);
   assert.match(app, /showModal\(\)/);

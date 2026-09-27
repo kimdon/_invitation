@@ -21,6 +21,18 @@ export const GALLERY_PHOTOS = Object.freeze([
   "./images/gallery/IMG_7030.JPG",
 ].sort((left, right) => Number(left.match(/IMG_(\d+)/)[1]) - Number(right.match(/IMG_(\d+)/)[1])));
 
+export const DEVELOPER_GALLERY_PHOTOS = Object.freeze([
+  "./images/gallery/develop-mode/IMG_200.HEIC",
+  "./images/gallery/develop-mode/IMG_210.JPG",
+  "./images/gallery/develop-mode/IMG_211.JPG",
+  "./images/gallery/develop-mode/IMG_220.HEIC",
+  "./images/gallery/develop-mode/IMG_300.HEIC",
+  "./images/gallery/develop-mode/IMG_310.HEIC",
+  "./images/gallery/develop-mode/IMG_320.JPG",
+  "./images/gallery/develop-mode/IMG_400.HEIC",
+  "./images/gallery/develop-mode/IMG_401.JPG",
+].sort((left, right) => Number(left.match(/IMG_(\d+)/)[1]) - Number(right.match(/IMG_(\d+)/)[1])));
+
 const ACCOUNT_GROUPS = {
   groom: [
     { role: "신랑", bank: "국민은행", number: "000000-01-000001", holder: "김병관" },
@@ -199,11 +211,16 @@ export function buildMobileMapLinks(venue, { userAgent = "", maxTouchPoints = 0,
   return links;
 }
 
-export function getGallerySources(number) {
-  const filename = GALLERY_PHOTOS[number - 1].split("/").pop().replace(/\.[^.]+$/, ".webp");
+export function getGalleryPhotos(mode = "normal") {
+  return mode === "developer" ? DEVELOPER_GALLERY_PHOTOS : GALLERY_PHOTOS;
+}
+
+export function getGallerySources(number, mode = "normal") {
+  const filename = getGalleryPhotos(mode)[number - 1].split("/").pop().replace(/\.[^.]+$/, ".webp");
+  const directory = mode === "developer" ? "./images/gallery/optimized/developer" : "./images/gallery/optimized";
   return {
-    thumbnail: `./images/gallery/optimized/thumbnails/${filename}`,
-    full: `./images/gallery/optimized/full/${filename}`,
+    thumbnail: `${directory}/thumbnails/${filename}`,
+    full: `${directory}/full/${filename}`,
   };
 }
 

@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { setImmediate } from "node:timers/promises";
 import { runInNewContext } from "node:vm";
-import { getGallerySources } from "../src/invitation.js";
+import * as galleryData from "../src/invitation.js";
+const { getGallerySources } = galleryData;
 
 const source = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
 const setup = source.slice(source.indexOf("function setupPhotoViewer("), source.indexOf("function createGalleryItem("));
@@ -80,7 +81,8 @@ function fixture({ reducedMotion = false, saveData = true, effectiveType = "4g" 
   body.append(dialog);
   document.append(body);
   const show = runInNewContext(`${legacyLoader}\n${zoomSetup}\n${setup}\n${zoomSetup ? "setupZoomPrevention();" : ""}\nsetupPhotoViewer();`, {
-    document, window: { matchMedia: () => ({ matches: reducedMotion }) }, getGallerySources, GALLERY_SIZE: 17,
+    document, window: { matchMedia: () => ({ matches: reducedMotion }) }, getGallerySources,
+    getGalleryPhotos: (mode) => mode === "developer" ? galleryData.DEVELOPER_GALLERY_PHOTOS : galleryData.GALLERY_PHOTOS.slice(0, 17),
     navigator: { connection: { saveData, effectiveType } },
   });
   const resolveImage = async (index) => { images[index].naturalWidth = 1200; images[index].dispatch("load"); images[index].ready.resolve(); await setImmediate(); };
@@ -120,6 +122,27 @@ test("viewer keeps the visible photo while decoding and slides separate panes wi
   animations[1].resolve();
   await setImmediate();
   assert.equal(ids["photo-viewer-label"].textContent, "1 / 17");
+});
+
+test("developer viewer wraps within its nine photos and never reuses a normal-mode full image", async () => {
+  const { ids, images, show, resolveImage } = fixture({ reducedMotion: true });
+  show(1);
+  await resolveImage(0);
+  assert.match(images[0].src, /optimized\/full\/IMG_5000\.webp$/);
+  ids["photo-viewer-close"].click();
+  show(9, "developer");
+  await resolveImage(1);
+  assert.equal(ids["photo-viewer-label"].textContent, "9 / 9");
+  assert.match(images[1].src, /optimized\/developer\/full\/IMG_401\.webp$/);
+  ids["photo-viewer-next"].click();
+  await resolveImage(2);
+  assert.equal(ids["photo-viewer-label"].textContent, "1 / 9");
+  assert.match(images[2].src, /optimized\/developer\/full\/IMG_200\.webp$/);
+  ids["photo-viewer-close"].click();
+  show(1);
+  await resolveImage(3);
+  assert.equal(ids["photo-viewer-label"].textContent, "1 / 17");
+  assert.match(images[3].src, /optimized\/full\/IMG_5000\.webp$/);
 });
 
 test("viewer warms only adjacent photos and reuses them on navigation", async () => {
