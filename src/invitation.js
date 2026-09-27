@@ -207,21 +207,6 @@ export function getGallerySources(number) {
   };
 }
 
-export function buildGalleryPage(photoCount, perPage, requestedPage) {
-  const pageCount = Math.max(1, Math.ceil(photoCount / perPage));
-  const page = Math.min(pageCount - 1, Math.max(0, requestedPage));
-  const start = page * perPage + 1;
-  const end = Math.min(photoCount, start + perPage - 1);
-
-  return {
-    page,
-    pageCount,
-    items: photoCount
-      ? Array.from({ length: end - start + 1 }, (_, index) => start + index)
-      : [],
-  };
-}
-
 export function getAccountGroup(side) {
   return (ACCOUNT_GROUPS[side] ?? []).map((account) => ({ ...account }));
 }
