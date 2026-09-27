@@ -18,6 +18,79 @@ const GALLERY_SIZE = GALLERY_PHOTOS.length;
 const GALLERY_PER_PAGE = 6;
 const WEDDING_DATE = new Date(2026, 10, 21, 12);
 
+function setupBackgroundMusic() {
+  const audio = document.getElementById("bgm-audio");
+  const button = document.getElementById("bgm-toggle");
+  const playlist = [audio.getAttribute("src"), "./bgm/wedding.mp3"];
+  let trackIndex = 0;
+  let requestId = 0;
+
+  function setState(state) {
+    const label = state === "playing" || state === "loading" ? "배경음악 일시정지"
+      : state === "error" ? "배경음악 다시 재생" : "배경음악 재생";
+    button.dataset.state = state;
+    button.setAttribute("aria-label", label);
+    button.setAttribute("aria-busy", String(state === "loading"));
+    button.title = state === "blocked" ? "화면을 터치하면 배경음악이 재생됩니다"
+      : state === "error" ? "배경음악을 불러오지 못했습니다. 눌러서 다시 시도해 주세요" : label;
+  }
+
+  function stopGestureRetry() {
+    document.removeEventListener("pointerup", retryAfterInteraction);
+    document.removeEventListener("keydown", retryAfterInteraction);
+  }
+
+  async function play() {
+    const request = ++requestId;
+    stopGestureRetry();
+    setState("loading");
+    try {
+      await audio.play();
+      if (request === requestId) setState(audio.paused ? "paused" : "playing");
+    } catch (error) {
+      if (request !== requestId) return;
+      if (error.name === "NotAllowedError") {
+        setState("blocked");
+        document.addEventListener("pointerup", retryAfterInteraction);
+        document.addEventListener("keydown", retryAfterInteraction);
+      } else {
+        setState(error.name === "AbortError" ? "paused" : "error");
+      }
+    }
+  }
+
+  function retryAfterInteraction(event) {
+    if (button.contains(event.target)) return;
+    if (event.type === "keydown" && !["Enter", " "].includes(event.key)) return;
+    void play();
+  }
+
+  button.addEventListener("click", () => {
+    if (!audio.paused || button.dataset.state === "loading") {
+      requestId += 1;
+      stopGestureRetry();
+      audio.pause();
+      setState("paused");
+    } else {
+      void play();
+    }
+  });
+  audio.addEventListener("playing", () => { stopGestureRetry(); setState("playing"); });
+  audio.addEventListener("pause", () => setState("paused"));
+  audio.addEventListener("ended", () => {
+    trackIndex = (trackIndex + 1) % playlist.length;
+    audio.src = playlist[trackIndex];
+    void play();
+  });
+  audio.addEventListener("error", () => {
+    requestId += 1;
+    stopGestureRetry();
+    setState("error");
+  });
+  audio.volume = 0.35;
+  void play();
+}
+
 function setupZoomPrevention() {
   const options = { passive: false, capture: true };
   const prevent = (event) => { if (event.cancelable) event.preventDefault(); };
@@ -495,7 +568,7 @@ async function copyAccountNumber(text) {
   fallbackCopy(text);
 }
 
-function createAccountRow(account, showToast) {
+function createAccountRow(account) {
   const row = document.createElement("article");
   row.className = "account-row";
 
@@ -513,9 +586,17 @@ function createAccountRow(account, showToast) {
   copy.type = "button";
   copy.className = "account-row__copy";
   copy.setAttribute("aria-label", `${account.role} 계좌번호 복사`);
+  let copiedTimer;
   copy.addEventListener("click", async () => {
     await copyAccountNumber(account.number);
-    showToast();
+    icon.src = "./images/account-icons/check.svg";
+    copy.setAttribute("aria-label", `${account.role} 계좌번호 복사 완료`);
+    document.getElementById("copy-status").textContent = `${account.role} 계좌번호가 복사되었습니다.`;
+    clearTimeout(copiedTimer);
+    copiedTimer = setTimeout(() => {
+      icon.src = "./images/account-icons/copy.svg";
+      copy.setAttribute("aria-label", `${account.role} 계좌번호 복사`);
+    }, 1800);
   });
   const name = document.createElement("span");
   name.className = "account-row__name";
@@ -539,17 +620,6 @@ function setupAccountAccordions() {
   const invitation = document.querySelector(".invitation");
   const buttons = document.querySelectorAll("[data-account-side]");
   const populatedSides = new Set();
-  const toast = document.getElementById("copy-toast");
-  let toastTimer;
-
-  function showToast() {
-    toast.textContent = "계좌번호가 복사되었습니다.";
-    toast.hidden = false;
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => {
-      toast.hidden = true;
-    }, 1800);
-  }
 
   function syncPresentation() {
     const visible = invitation.dataset.mode !== "switching";
@@ -570,7 +640,7 @@ function setupAccountAccordions() {
       const panel = document.getElementById(`${side}-accounts-panel`);
       if (!populatedSides.has(side)) {
         document.getElementById(`${side}-accounts-list`).replaceChildren(
-          ...getAccountGroup(side).map((account) => createAccountRow(account, showToast)),
+          ...getAccountGroup(side).map((account) => createAccountRow(account)),
         );
         populatedSides.add(side);
       }
@@ -1026,6 +1096,7 @@ function addPetals() {
   }
 }
 
+setupBackgroundMusic();
 setupZoomPrevention();
 renderCoverPhoto();
 renderCalendar();
