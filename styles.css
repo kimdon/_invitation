@@ -554,8 +554,19 @@ a {
   font-family: Gulim, "굴림", sans-serif;
 }
 
+.venue-map-fallback {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #ffffff;
+}
+
 .map-frame[hidden],
 .venue-map-canvas[hidden],
+.venue-map-fallback[hidden],
 .venue-map-status[hidden] {
   display: none !important;
 }

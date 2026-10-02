@@ -182,14 +182,20 @@ test("both mode switches share a raised icon button with the same dimensions", a
   assert.match(sharedFace, /box-shadow:/);
 });
 
-test("location starts with an empty-map message inside the visible frame without requesting a static map", async () => {
+test("location starts with the local venue image while the dynamic map is paused", async () => {
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
   const frame = html.match(/<div[^>]*id="venue-map-frame"[^>]*>[\s\S]*?\n        <\/div>/)?.[0];
   assert.ok(frame);
   assert.doesNotMatch(frame.split(">", 1)[0], /\bhidden\b/);
-  assert.match(frame, /id="venue-map-status"[^>]*>약도가 없습니다<\/p>/);
+  assert.match(frame, /id="venue-map-status"[^>]*hidden[^>]*>약도가 없습니다<\/p>/);
   assert.match(frame, /id="venue-map"[^>]*hidden/);
-  assert.doesNotMatch(html, /venue-map\.png|venue-map-fallback|약도와 지도 자리표시자/);
+  const fallback = frame.match(/<img[^>]*id="venue-map-fallback"[^>]*>/)?.[0];
+  assert.ok(fallback);
+  assert.match(fallback, /src="\.\/images\/venue-map\.png"/);
+  assert.match(fallback, /alt="보타닉 웨딩파크 약도"/);
+  assert.match(fallback, /width="1280"/);
+  assert.match(fallback, /height="1276"/);
+  assert.doesNotMatch(fallback, /\bhidden\b/);
   const metadata = await sharp(fileURLToPath(new URL("../images/venue-map.png", import.meta.url))).metadata();
   assert.equal(metadata.width, 1280);
   assert.equal(metadata.height, 1276);

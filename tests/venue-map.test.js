@@ -9,8 +9,9 @@ function fixture({ intersection = true, enabled = true } = {}) {
   const section = {};
   const frame = { dataset: {}, hidden: true, parentElement: section, clientWidth: 340, clientHeight: 280 };
   const canvas = { hidden: true };
+  const fallback = { hidden: false };
   const status = { textContent: "", hidden: true };
-  const nodes = { "venue-map-frame": frame, "venue-map": canvas, "venue-map-status": status };
+  const nodes = { "venue-map-frame": frame, "venue-map": canvas, "venue-map-fallback": fallback, "venue-map-status": status };
   const scripts = [];
   const timers = new Map();
   const observations = {};
@@ -52,7 +53,7 @@ function fixture({ intersection = true, enabled = true } = {}) {
       Event: { once(map, event, callback) { assert.equal(event, "tilesloaded"); tilesLoaded = callback; } },
     } };
   }
-  return { frame, canvas, section, status, scripts, timers, maps, markers, window, observations, installSdk, setup,
+  return { frame, canvas, fallback, section, status, scripts, timers, maps, markers, window, observations, installSdk, setup,
     approach() { observations.intersect?.([{ isIntersecting: true }]); },
     finish() { tilesLoaded(); },
   };
@@ -72,8 +73,8 @@ for (const intersection of [true, false]) {
       assert.equal(f.frame.hidden, false);
       assert.equal(f.frame.dataset.mapState, "paused");
       assert.equal(f.canvas.hidden, true);
-      assert.equal(f.status.hidden, false);
-      assert.equal(f.status.textContent, "약도가 없습니다");
+      assert.equal(f.fallback.hidden, false);
+      assert.equal(f.status.hidden, true);
     }
   });
 }
@@ -82,6 +83,7 @@ test("map SDK loads only near Location and is not requested again", () => {
   const f = fixture();
   assert.equal(f.scripts.length, 0);
   assert.equal(f.frame.hidden, true);
+  assert.equal(f.fallback.hidden, true);
   assert.equal(f.observations.target, f.section, "observe the visible Location section, not the hidden map");
   const observer = f.observations.intersect;
   f.setup({ enabled: true });
@@ -91,6 +93,7 @@ test("map SDK loads only near Location and is not requested again", () => {
   f.approach();
   f.approach();
   assert.equal(f.scripts.length, 1);
+  assert.equal(f.fallback.hidden, true);
   const url = new URL(f.scripts[0].src);
   assert.equal(url.origin, "https://oapi.map.naver.com");
   assert.equal(url.searchParams.get("ncpKeyId"), "sffg6ukgp6");
@@ -98,7 +101,7 @@ test("map SDK loads only near Location and is not requested again", () => {
   assert.equal(f.observations.disconnected, true);
 });
 
-test("map marks the official venue and reveals its tiles when ready without an image fallback", () => {
+test("map marks the official venue and hides the image fallback when ready", () => {
   const f = fixture();
   f.approach();
   f.installSdk();
@@ -117,6 +120,7 @@ test("map marks the official venue and reveals its tiles when ready without an i
   assert.equal(f.frame.dataset.mapState, "ready");
   assert.equal(f.frame.hidden, false);
   assert.equal(f.canvas.hidden, false);
+  assert.equal(f.fallback.hidden, true);
   assert.equal(f.status.hidden, true);
   assert.equal(f.timers.size, 0);
   f.scripts[0].load();
@@ -124,7 +128,7 @@ test("map marks the official venue and reveals its tiles when ready without an i
 });
 
 for (const failure of ["authentication", "network", "timeout", "sdk-unavailable"]) {
-  test(`${failure} failure keeps the frame with an empty-map message and does not retry`, () => {
+  test(`${failure} failure shows the local venue image and does not retry`, () => {
     const f = fixture();
     f.approach();
     if (failure === "authentication") f.window.navermap_authFailure();
@@ -135,8 +139,8 @@ for (const failure of ["authentication", "network", "timeout", "sdk-unavailable"
     assert.equal(f.frame.dataset.mapError, failure);
     assert.equal(f.frame.hidden, false);
     assert.equal(f.canvas.hidden, true);
-    assert.equal(f.status.hidden, false);
-    assert.equal(f.status.textContent, "약도가 없습니다");
+    assert.equal(f.fallback.hidden, false);
+    assert.equal(f.status.hidden, true);
     assert.equal(f.timers.size, 0);
     f.installSdk();
     f.scripts[0].load();
@@ -144,6 +148,7 @@ for (const failure of ["authentication", "network", "timeout", "sdk-unavailable"
     f.setup({ enabled: true });
     assert.equal(f.scripts.length, 1);
     assert.equal(f.maps.length, 0, "a late SDK callback must not reopen the map");
+    assert.equal(f.fallback.hidden, false);
   });
 }
 
@@ -163,7 +168,7 @@ test("map resizes and recenters after mode changes without another SDK load", ()
   assert.equal(f.scripts.length, 1);
 });
 
-test("a late authentication or quota rejection replaces the map with the empty message", () => {
+test("a late authentication rejection replaces the map with the local venue image", () => {
   const f = fixture();
   f.approach();
   f.installSdk();
@@ -173,8 +178,8 @@ test("a late authentication or quota rejection replaces the map with the empty m
   assert.equal(f.frame.dataset.mapState, "error");
   assert.equal(f.frame.hidden, false);
   assert.equal(f.canvas.hidden, true);
-  assert.equal(f.status.hidden, false);
-  assert.equal(f.status.textContent, "약도가 없습니다");
+  assert.equal(f.fallback.hidden, false);
+  assert.equal(f.status.hidden, true);
   f.finish();
   assert.equal(f.frame.dataset.mapState, "error", "late tiles must not bring a rejected map back");
   f.observations.resize();
@@ -182,4 +187,20 @@ test("a late authentication or quota rejection replaces the map with the empty m
   f.approach();
   assert.equal(f.scripts.length, 1);
   assert.equal(f.maps.length, 1);
+  assert.equal(f.fallback.hidden, false);
+});
+
+test("tiles arriving after the loading timeout do not hide the fallback image", () => {
+  const f = fixture();
+  f.approach();
+  f.installSdk();
+  f.scripts[0].load();
+  [...f.timers.values()][0]();
+  f.finish();
+  assert.equal(f.frame.dataset.mapState, "error");
+  assert.equal(f.frame.dataset.mapError, "timeout");
+  assert.equal(f.canvas.hidden, true);
+  assert.equal(f.fallback.hidden, false);
+  assert.equal(f.status.hidden, true);
+  assert.equal(f.scripts.length, 1);
 });
