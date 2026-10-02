@@ -8,19 +8,26 @@ const VENUE = { latitude: 37.5673842, longitude: 126.827051 };
 export function setupVenueMap({ enabled = false } = {}) {
   const frame = document.getElementById("venue-map-frame");
   const canvas = document.getElementById("venue-map");
+  const fallback = document.getElementById("venue-map-fallback");
   const status = document.getElementById("venue-map-status");
-  if (!frame || !canvas || !status || frame.dataset.mapMounted === "true") return;
-  if (!enabled) {
-    frame.dataset.mapState = "paused";
+  if (!frame || !canvas || !fallback || !status || frame.dataset.mapMounted === "true") return;
+
+  function showFallback() {
     frame.hidden = false;
     canvas.hidden = true;
-    status.textContent = "약도가 없습니다";
-    status.hidden = false;
+    fallback.hidden = false;
+    status.hidden = true;
+  }
+
+  if (!enabled) {
+    frame.dataset.mapState = "paused";
+    showFallback();
     return;
   }
   frame.dataset.mapMounted = "true";
   frame.dataset.mapState = "idle";
   frame.hidden = true;
+  fallback.hidden = true;
   status.hidden = true;
   let state = "idle";
   let map;
@@ -31,10 +38,7 @@ export function setupVenueMap({ enabled = false } = {}) {
     state = frame.dataset.mapState = "error";
     frame.dataset.mapError = reason;
     window.clearTimeout(timeout);
-    canvas.hidden = true;
-    frame.hidden = false;
-    status.textContent = "약도가 없습니다";
-    status.hidden = false;
+    showFallback();
   }
 
   function initialize() {
