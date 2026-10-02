@@ -812,7 +812,7 @@ function setupDeveloperMode() {
 
   function startAgentRotation() {
     stopAgentRotation();
-    if (reducedMotion.matches || invitation.dataset.mode !== "developer" || isFinalApproved) return;
+    if (reducedMotion.matches || invitation.dataset.mode !== "developer") return;
     agentInterval = window.setInterval(() => renderAgent(agentIndex + 1), 3_500);
   }
 
@@ -1058,7 +1058,6 @@ function setupDeveloperMode() {
   submit.addEventListener("click", () => {
     if (state !== "developer.ready" || isFinalApproved) return;
     isFinalApproved = true;
-    stopAgentRotation();
     submit.textContent = "APPROVED ✓";
     submit.disabled = true;
     response.textContent = "FINAL APPROVAL COMPLETE — wedding-v1.0 is ready to merge ♥";
