@@ -221,15 +221,17 @@ test("optimized gallery assets preserve photo shape with bounded dimensions and 
   }
 });
 
-test("getAccountGroup returns the two groom accounts and the unchanged bride accounts", async () => {
+test("getAccountGroup returns the requested groom and bride accounts", async () => {
   const { getAccountGroup } = await import("../src/invitation.js");
   assert.equal(typeof getAccountGroup, "function");
   assert.deepEqual(getAccountGroup("groom"), [
     { role: "신랑", bank: "우리은행", number: "1002-431-518143", holder: "김병관" },
     { role: "신랑 아버지", bank: "농협은행", number: "100091-56-099125", holder: "김창희" },
   ]);
-  assert.deepEqual(getAccountGroup("bride").map((account) => account.holder), [
-    "김도은", "김천호", "김민주",
+  assert.deepEqual(getAccountGroup("bride"), [
+    { role: "신부", bank: "국민은행", number: "037601-04-111958", holder: "김도은" },
+    { role: "신부 아버지", bank: "우리은행", number: "1002-842-762652", holder: "김천호" },
+    { role: "신부 어머니", bank: "기업은행", number: "483-047820-01-014", holder: "김민주" },
   ]);
 });
 

@@ -39,9 +39,9 @@ const ACCOUNT_GROUPS = {
     { role: "신랑 아버지", bank: "농협은행", number: "100091-56-099125", holder: "김창희" },
   ],
   bride: [
-    { role: "신부", bank: "신한은행", number: "000000-01-000004", holder: "김도은" },
-    { role: "신부 아버지", bank: "신한은행", number: "000000-01-000005", holder: "김천호" },
-    { role: "신부 어머니", bank: "신한은행", number: "000000-01-000006", holder: "김민주" },
+    { role: "신부", bank: "국민은행", number: "037601-04-111958", holder: "김도은" },
+    { role: "신부 아버지", bank: "우리은행", number: "1002-842-762652", holder: "김천호" },
+    { role: "신부 어머니", bank: "기업은행", number: "483-047820-01-014", holder: "김민주" },
   ],
 };
 
