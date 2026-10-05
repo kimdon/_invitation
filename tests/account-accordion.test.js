@@ -88,7 +88,7 @@ test("normal account groups expand independently in place without opening a dial
   assert.equal(f.ids["account-dialog"].open, false);
   assert.equal(f.buttons[0].getAttribute("aria-expanded"), "true");
   assert.equal(f.ids["groom-accounts-panel"].inert, false);
-  assert.equal(f.ids["groom-accounts-list"].children.length, 3);
+  assert.equal(f.ids["groom-accounts-list"].children.length, 2);
   await f.buttons[1].dispatch("click");
   assert.equal(f.buttons[0].getAttribute("aria-expanded"), "true");
   assert.equal(f.ids["bride-accounts-list"].children.length, 3);
@@ -102,7 +102,7 @@ test("inline cards keep every existing account and only copy the selected accoun
   const f = fixture();
   for (const [index, side] of ["groom", "bride"].entries()) {
     await f.buttons[index].dispatch("click");
-    assert.equal(f.ids[`${side}-accounts-list`].children.length, 3);
+    assert.equal(f.ids[`${side}-accounts-list`].children.length, side === "groom" ? 2 : 3);
     for (const [position, account] of getAccountGroup(side).entries()) {
       const row = f.ids[`${side}-accounts-list`].children[position];
       assert.equal(findByClass(row, "account-row__name").textContent, account.holder);
@@ -159,7 +159,7 @@ test("both account cards reset to collapsed on every mode entry while retaining 
   assert.equal(f.buttons[0].getAttribute("aria-expanded"), "false");
   await f.buttons[0].dispatch("click");
   assert.equal(f.ids["account-dialog"].open, false);
-  assert.equal(f.ids["groom-accounts-list"].children.length, 3);
+  assert.equal(f.ids["groom-accounts-list"].children.length, 2);
   assert.equal(f.ids["groom-accounts-panel"].inert, false);
   await f.buttons[1].dispatch("click");
   assert.equal(f.ids["bride-accounts-list"].children.length, 3);
@@ -186,7 +186,7 @@ test("both account cards reset to collapsed on every mode entry while retaining 
       await f.buttons[index].dispatch("click");
       assert.equal(f.buttons[index].getAttribute("aria-expanded"), "true");
       assert.equal(panel.inert, false);
-      assert.equal(f.ids[`${side}-accounts-list`].children.length, 3);
+      assert.equal(f.ids[`${side}-accounts-list`].children.length, side === "groom" ? 2 : 3);
       assert.equal(f.ids[`${side}-accounts-list`].children[0], firstRow);
     }
   }

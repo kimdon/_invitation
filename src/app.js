@@ -1109,7 +1109,7 @@ const openViewer = setupPhotoViewer();
 setupGallery(openViewer);
 setupAccountAccordions();
 setupMapLinks();
-setupVenueMap();
+setupVenueMap({ enabled: true });
 setupDeveloperMode();
 setupRevealAnimations();
 addPetals();
