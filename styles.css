@@ -1056,6 +1056,120 @@ a {
   font-weight: 400;
 }
 
+.developer-intro {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  padding: 26px 26px 68px;
+  opacity: 1;
+  transition: opacity 280ms ease;
+}
+
+.developer-intro[hidden],
+.developer-transition__lines[hidden] {
+  display: none;
+}
+
+.developer-intro.is-exiting {
+  opacity: 0;
+}
+
+.developer-intro__mode {
+  color: var(--terminal-text);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.developer-intro__mode span {
+  color: var(--terminal-green);
+}
+
+.developer-intro__body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.developer-intro__heart {
+  margin-bottom: 28px;
+  color: var(--terminal-pink);
+  font-size: 32px;
+  line-height: 1;
+}
+
+.developer-intro__title {
+  margin-bottom: 18px;
+  color: #edf3ef;
+  font-size: clamp(14px, 4vw, 16px);
+  font-weight: 500;
+  line-height: 1.8;
+  word-break: keep-all;
+}
+
+.developer-intro__message {
+  max-width: 330px;
+  color: #b5c2b9;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 2;
+  word-break: keep-all;
+}
+
+.developer-intro__progress {
+  width: 72px;
+  height: 2px;
+  margin: 36px 0 14px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: #193324;
+}
+
+.developer-intro__progress span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--terminal-green);
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: developer-intro-progress 4s linear forwards;
+}
+
+.developer-intro__note {
+  color: var(--terminal-dim);
+  font-size: 11px;
+  line-height: 1.8;
+}
+
+@keyframes developer-intro-progress {
+  to { transform: scaleX(1); }
+}
+
+@media (max-height: 500px) {
+  .developer-intro {
+    padding: 16px 24px 24px;
+    overflow-y: auto;
+  }
+
+  .developer-intro__body {
+    flex: none;
+    padding-top: 24px;
+  }
+
+  .developer-intro__heart {
+    margin-bottom: 14px;
+  }
+
+  .developer-intro__progress {
+    margin-top: 20px;
+  }
+}
+
 .developer-transition__brand {
   display: grid;
   justify-items: center;
@@ -2522,6 +2636,10 @@ body.is-developer-mode .petal-layer {
   .developer-log-line,
   .developer-transition__lines p {
     opacity: 1;
+    transform: none;
+  }
+
+  .developer-intro__progress span {
     transform: none;
   }
 }

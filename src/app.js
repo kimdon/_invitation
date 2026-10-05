@@ -696,6 +696,7 @@ function setupDeveloperMode() {
   const invitation = document.querySelector(".invitation");
   const toggle = document.getElementById("developer-toggle");
   const transition = document.getElementById("developer-transition");
+  const transitionIntro = document.getElementById("developer-intro");
   const transitionBrand = document.getElementById("developer-transition-brand");
   const transitionLines = document.getElementById("developer-transition-lines");
   const pageSections = invitation.querySelectorAll(
@@ -725,13 +726,13 @@ function setupDeveloperMode() {
     const timer = window.setTimeout(() => {
       timers.delete(timer);
       callback();
-    }, reducedMotion.matches ? 0 : delay);
+    }, delay);
     timers.add(timer);
     return timer;
   }
 
-  function wait(delay) {
-    return new Promise((resolve) => schedule(resolve, delay));
+  function wait(delay, { preserveDelay = false } = {}) {
+    return new Promise((resolve) => schedule(resolve, reducedMotion.matches && !preserveDelay ? 0 : delay));
   }
 
   function stopAgentRotation() {
@@ -907,12 +908,26 @@ function setupDeveloperMode() {
     toggle.removeAttribute("aria-describedby");
     toggle.disabled = true;
     transition.classList.remove("is-exiting");
+    transitionIntro.classList.remove("is-exiting");
+    transitionIntro.hidden = false;
     transitionBrand.hidden = true;
+    transitionLines.hidden = true;
     transitionLines.replaceChildren();
-    transitionLines.setAttribute("aria-busy", "true");
+    transitionLines.setAttribute("aria-busy", "false");
     transition.hidden = false;
     setPageSectionsHidden(true);
     window.scrollTo({ top: 0, behavior: reducedMotion.matches ? "auto" : "smooth" });
+
+    // Reading time is not an animation: retain it with reduced motion enabled.
+    await wait(4000, { preserveDelay: true });
+    if (id !== sequenceId || invitation.dataset.mode !== "switching") return;
+    transitionIntro.classList.add("is-exiting");
+    await wait(280);
+    if (id !== sequenceId || invitation.dataset.mode !== "switching") return;
+    transitionIntro.hidden = true;
+    transitionIntro.classList.remove("is-exiting");
+    transitionLines.hidden = false;
+    transitionLines.setAttribute("aria-busy", "true");
 
     for (const command of DEVELOPER_TRANSITION_COMMANDS) {
       appendTransition(command);
@@ -939,7 +954,10 @@ function setupDeveloperMode() {
     toggle.disabled = false;
     transition.hidden = true;
     transition.classList.remove("is-exiting");
+    transitionIntro.hidden = true;
+    transitionIntro.classList.remove("is-exiting");
     transitionBrand.hidden = true;
+    transitionLines.hidden = false;
     transitionLines.setAttribute("aria-busy", "false");
     transitionLines.replaceChildren();
     setPageSectionsHidden(false);
