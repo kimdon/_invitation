@@ -182,7 +182,7 @@ test("both mode switches share a raised icon button with the same dimensions", a
   assert.match(sharedFace, /box-shadow:/);
 });
 
-test("location starts with the local venue image while the dynamic map is paused", async () => {
+test("location preserves the local venue fallback before JavaScript loads", async () => {
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
   const frame = html.match(/<div[^>]*id="venue-map-frame"[^>]*>[\s\S]*?\n        <\/div>/)?.[0];
   assert.ok(frame);
@@ -221,11 +221,12 @@ test("optimized gallery assets preserve photo shape with bounded dimensions and 
   }
 });
 
-test("getAccountGroup returns the requested three account holders", async () => {
+test("getAccountGroup returns the two groom accounts and the unchanged bride accounts", async () => {
   const { getAccountGroup } = await import("../src/invitation.js");
   assert.equal(typeof getAccountGroup, "function");
-  assert.deepEqual(getAccountGroup("groom").map((account) => account.holder), [
-    "김병관", "김창희", "김경자",
+  assert.deepEqual(getAccountGroup("groom"), [
+    { role: "신랑", bank: "우리은행", number: "1002-431-518143", holder: "김병관" },
+    { role: "신랑 아버지", bank: "농협은행", number: "100091-56-099125", holder: "김창희" },
   ]);
   assert.deepEqual(getAccountGroup("bride").map((account) => account.holder), [
     "김도은", "김천호", "김민주",
@@ -249,7 +250,7 @@ test("the page keeps external directions buttons alongside the lazy Naver map", 
   assert.doesNotMatch(source, /%20%EC%98%A4%ED%82%A4%EB%93%9C%ED%99%80/);
   assert.doesNotMatch(source, /dapi\.kakao\.com/);
   assert.match(html, /id="venue-map"/);
-  assert.match(app, /setupVenueMap\(\)/);
+  assert.match(app, /setupVenueMap\(\{\s*enabled:\s*true\s*\}\)/);
   assert.doesNotMatch(html, /<script[^>]+oapi\.map\.naver\.com/);
   assert.match(css, /\.gallery-disclosure\s*\{[^}]*border:\s*0[^}]*background:\s*transparent/s);
   assert.match(css, /\.gallery-footnote\s*\{[^}]*margin:\s*4px 0 0/s);

@@ -35,9 +35,8 @@ export const DEVELOPER_GALLERY_PHOTOS = Object.freeze([
 
 const ACCOUNT_GROUPS = {
   groom: [
-    { role: "신랑", bank: "국민은행", number: "000000-01-000001", holder: "김병관" },
-    { role: "신랑 아버지", bank: "국민은행", number: "000000-01-000002", holder: "김창희" },
-    { role: "신랑 어머니", bank: "국민은행", number: "000000-01-000003", holder: "김경자" },
+    { role: "신랑", bank: "우리은행", number: "1002-431-518143", holder: "김병관" },
+    { role: "신랑 아버지", bank: "농협은행", number: "100091-56-099125", holder: "김창희" },
   ],
   bride: [
     { role: "신부", bank: "신한은행", number: "000000-01-000004", holder: "김도은" },

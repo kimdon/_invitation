@@ -82,7 +82,7 @@ BGM 출처: [네이버 블로그 원문](https://m.blog.naver.com/PostView.naver
 
 ## 계좌 안내
 
-일반·개발자 모드의 `마음 전하실 곳`은 신랑측·신부측 카드를 각각 펼쳐 가족 세 명의 계좌를 확인하는 방식입니다. 이름·은행·계좌번호와 복사 버튼만 제공하며, 은행 앱 실행이나 송금 서비스는 연동하지 않습니다. 현재 여섯 계좌는 기존 임시값을 사용합니다. 데이터는 `src/invitation.js`의 `ACCOUNT_GROUPS`에서 관리합니다.
+일반·개발자 모드의 `마음 전하실 곳`은 신랑측·신부측 카드를 각각 펼쳐 신랑측 2명·신부측 3명의 계좌를 확인하는 방식입니다. 이름·은행·계좌번호와 복사 버튼만 제공하며, 은행 앱 실행이나 송금 서비스는 연동하지 않습니다. 신랑측은 입력된 계좌 정보를 사용하며, 신부측은 기존 임시값을 사용합니다. 데이터는 `src/invitation.js`의 `ACCOUNT_GROUPS`에서 관리합니다.
 
 두 모드에서 계좌를 팝업 없이 본문 안에 표시합니다. 최초 진입과 모드 전환 시 신랑측·신부측 카드는 모두 접힌 상태로 시작하며, 사용자가 누른 카드만 펼칩니다. 접힌 카드 내용은 키보드 탐색과 화면 읽기에서 제외하고, 동작 줄이기 설정에서는 펼침 애니메이션을 생략합니다.
 
@@ -90,7 +90,7 @@ BGM 출처: [네이버 블로그 원문](https://m.blog.naver.com/PostView.naver
 
 ## 지도와 길찾기 버튼
 
-현재 지도 API 호출은 임시 중지 상태입니다. `setupVenueMap()`은 기본적으로 SDK와 지도 타일을 요청하지 않습니다. 일반·개발자 모드 모두 지도 영역에 저장된 약도 이미지(`images/venue-map.png`)를 표시합니다. 예식장 안내와 카카오맵·네이버지도·TMAP 길찾기 버튼은 유지합니다. 재개하려면 `src/app.js`의 호출을 `setupVenueMap({ enabled: true })`로 변경합니다. 이미 열린 화면에는 새로고침 이후 적용됩니다.
+현재 지도 API 호출은 활성화되어 있습니다. `src/app.js`에서 `setupVenueMap({ enabled: true })`로 네이버 지도를 사용하며, 일반·개발자 모드의 지도 영역을 공유합니다. 호출을 잠시 중지하려면 해당 호출을 `setupVenueMap({ enabled: false })`로 변경합니다. 중지 상태에서는 SDK와 지도 타일을 요청하지 않고 저장된 약도 이미지(`images/venue-map.png`)를 표시합니다. 예식장 안내와 카카오맵·네이버지도·TMAP 길찾기 버튼은 유지합니다. 이미 열린 화면에는 새로고침 이후 적용됩니다.
 
 활성화하면 Location에 네이버 Dynamic Map을 표시합니다. 브라우저용 Client ID는 `src/venue-map.js`에 있으며 Client Secret은 사용하거나 저장하지 않습니다. Naver Cloud의 Web 서비스 URL에 배포 도메인 `https://kimdon.github.io`와 로컬 미리보기 주소를 등록해야 합니다. [공식 SDK 안내](https://navermaps.github.io/maps.js.ncp/docs/tutorial-2-Getting-Started.html)의 `ncpKeyId` 인증 방식을 사용합니다.
 
