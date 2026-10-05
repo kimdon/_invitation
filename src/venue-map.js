@@ -4,7 +4,7 @@ const NAVER_CLIENT_ID = "sffg6ukgp6";
 // https://www.botanicparkwedding.com/location
 const VENUE = { latitude: 37.5673842, longitude: 126.827051 };
 
-// Temporarily paused. Opt in explicitly when map API requests should resume.
+// SDK requests are opt-in; callers can pause the map and retain the local fallback.
 export function setupVenueMap({ enabled = false } = {}) {
   const frame = document.getElementById("venue-map-frame");
   const canvas = document.getElementById("venue-map");
